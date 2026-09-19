@@ -1,0 +1,164 @@
+{
+  "generated_at": "2026-09-19T01:35:26.530511+00:00",
+  "buffer_meters": 30,
+  "cities": {
+    "Grosse Pointe Park": {
+      "slug": "grosse-pointe-park",
+      "total_km": 108.45,
+      "combined_driven_km": 0.0,
+      "combined_pct": 0.0,
+      "remaining_km": 108.45,
+      "buildings_total": 5109,
+      "houses_driven": 0,
+      "houses_pct": 0.0,
+      "sessions": {
+        "seth": 0,
+        "claire": 0,
+        "total": 0
+      },
+      "per_driver": {
+        "seth": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        },
+        "claire": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        }
+      }
+    },
+    "Grosse Pointe": {
+      "slug": "grosse-pointe",
+      "total_km": 55.94,
+      "combined_driven_km": 0.0,
+      "combined_pct": 0.0,
+      "remaining_km": 55.94,
+      "buildings_total": 653,
+      "houses_driven": 0,
+      "houses_pct": 0.0,
+      "sessions": {
+        "seth": 0,
+        "claire": 0,
+        "total": 0
+      },
+      "per_driver": {
+        "seth": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        },
+        "claire": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        }
+      }
+    },
+    "Grosse Pointe Farms": {
+      "slug": "grosse-pointe-farms",
+      "total_km": 104.01,
+      "combined_driven_km": 0.0,
+      "combined_pct": 0.0,
+      "remaining_km": 104.01,
+      "buildings_total": 1845,
+      "houses_driven": 0,
+      "houses_pct": 0.0,
+      "sessions": {
+        "seth": 0,
+        "claire": 0,
+        "total": 0
+      },
+      "per_driver": {
+        "seth": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        },
+        "claire": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        }
+      }
+    },
+    "Grosse Pointe Shores": {
+      "slug": "grosse-pointe-shores",
+      "total_km": 45.68,
+      "combined_driven_km": 0.0,
+      "combined_pct": 0.0,
+      "remaining_km": 45.68,
+      "buildings_total": 55,
+      "houses_driven": 0,
+      "houses_pct": 0.0,
+      "sessions": {
+        "seth": 0,
+        "claire": 0,
+        "total": 0
+      },
+      "per_driver": {
+        "seth": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        },
+        "claire": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        }
+      }
+    },
+    "Grosse Pointe Woods": {
+      "slug": "grosse-pointe-woods",
+      "total_km": 126.12,
+      "combined_driven_km": 0.0,
+      "combined_pct": 0.0,
+      "remaining_km": 126.12,
+      "buildings_total": 4685,
+      "houses_driven": 0,
+      "houses_pct": 0.0,
+      "sessions": {
+        "seth": 0,
+        "claire": 0,
+        "total": 0
+      },
+      "per_driver": {
+        "seth": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        },
+        "claire": {
+          "driven_km": 0.0,
+          "pct": 0.0,
+          "num_drives": 0
+        }
+      }
+    }
+  },
+  "overall": {
+    "total_km": 440.21,
+    "driven_km": 0.0,
+    "pct": 0.0,
+    "buildings_total": 12347,
+    "houses_driven": 0,
+    "total_sessions": 0,
+    "total_miles": 0.0
+  },
+  "leaderboard": {
+    "seth": {
+      "num_drives": 0,
+      "total_km": 0.0,
+      "total_miles": 0.0,
+      "last_drive_date": null
+    },
+    "claire": {
+      "num_drives": 0,
+      "total_km": 0.0,
+      "total_miles": 0.0,
+      "last_drive_date": null
+    }
+  }
+}

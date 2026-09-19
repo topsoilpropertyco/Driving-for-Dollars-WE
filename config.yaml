@@ -1,0 +1,39 @@
+# Grosse Pointe Driving Coverage Tracker — configuration
+# ------------------------------------------------------------------
+# Tokens are NEVER stored here.
+#   - Strava client_secret comes from the STRAVA_CLIENT_SECRET env var
+#   - per-athlete OAuth tokens live in tokens/<athlete>.json (mode 0600)
+
+strava:
+  client_id: "YOUR_STRAVA_CLIENT_ID"   # from https://www.strava.com/settings/api
+  redirect_uri: "http://localhost"     # set "Authorization Callback Domain" to localhost in your Strava API app
+  athletes: ["seth", "claire"]
+
+cities:
+  # Display order everywhere: closest to Detroit first (south -> north).
+  - "Grosse Pointe Park"
+  - "Grosse Pointe"
+  - "Grosse Pointe Farms"
+  - "Grosse Pointe Shores"
+  - "Grosse Pointe Woods"
+
+# Henry's priority-interest cities — starred in the dashboard.
+priority_cities:
+  - "Grosse Pointe Park"
+  - "Grosse Pointe Farms"
+  - "Grosse Pointe Woods"
+
+# A street counts as "driven" if a track passes within this many meters of it.
+buffer_meters: 30
+
+paths:
+  tokens_dir: "tokens"
+  tracks_dir: "data/tracks"
+  streets_dir: "data/streets"
+  boundaries_dir: "data/boundaries"
+  buildings_dir: "data/buildings"
+  undriven_dir: "data/undriven"
+  starthere: "data/starthere.json"
+  activities_index: "data/activities_index.json"
+  coverage: "data/coverage.json"
+  dashboard: "dashboard.html"

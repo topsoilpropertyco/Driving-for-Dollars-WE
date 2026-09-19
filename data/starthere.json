@@ -1,0 +1,364 @@
+{
+  "Grosse Pointe Park": [
+    {
+      "lat": 42.39625,
+      "lon": -82.9372,
+      "km": 6.93,
+      "streets": [
+        "Bedford Street",
+        "3 Mile Drive"
+      ]
+    },
+    {
+      "lat": 42.38664,
+      "lon": -82.93215,
+      "km": 6.37,
+      "streets": [
+        "Vernor Highway",
+        "Devonshire Road"
+      ]
+    },
+    {
+      "lat": 42.38356,
+      "lon": -82.92704,
+      "km": 6.31,
+      "streets": [
+        "Three Mile Drive",
+        "Kensington Avenue"
+      ]
+    },
+    {
+      "lat": 42.3666,
+      "lon": -82.92503,
+      "km": 5.88,
+      "streets": [
+        "Windmill Pointe Drive",
+        "Middlesex Road"
+      ]
+    },
+    {
+      "lat": 42.38507,
+      "lon": -82.92293,
+      "km": 5.05,
+      "streets": [
+        "Saint Paul Street",
+        "Yorkshire Road"
+      ]
+    },
+    {
+      "lat": 42.40127,
+      "lon": -82.93198,
+      "km": 4.79,
+      "streets": [
+        "Yorkshire Road",
+        "Bishop Street"
+      ]
+    },
+    {
+      "lat": 42.39709,
+      "lon": -82.9494,
+      "km": 4.34,
+      "streets": [
+        "Barham Street",
+        "Lakepointe Street"
+      ]
+    },
+    {
+      "lat": 42.3821,
+      "lon": -82.94021,
+      "km": 4.32,
+      "streets": [
+        "Lakepointe Street",
+        "Beaconsfield Avenue"
+      ]
+    }
+  ],
+  "Grosse Pointe": [
+    {
+      "lat": 42.39595,
+      "lon": -82.909,
+      "km": 7.01,
+      "streets": [
+        "Lincoln Road",
+        "Washington Road"
+      ]
+    },
+    {
+      "lat": 42.39028,
+      "lon": -82.91178,
+      "km": 3.83,
+      "streets": [
+        "Lakeland Street",
+        "Waterloo Street"
+      ]
+    },
+    {
+      "lat": 42.38507,
+      "lon": -82.92293,
+      "km": 3.36,
+      "streets": [
+        "Saint Paul Street"
+      ]
+    },
+    {
+      "lat": 42.39443,
+      "lon": -82.91845,
+      "km": 3.34,
+      "streets": [
+        "Charlevoix Avenue",
+        "Saint Clair Street"
+      ]
+    },
+    {
+      "lat": 42.38696,
+      "lon": -82.91502,
+      "km": 2.68,
+      "streets": [
+        "Notre Dame Street",
+        "Saint Clair Street"
+      ]
+    },
+    {
+      "lat": 42.40351,
+      "lon": -82.91669,
+      "km": 2.49,
+      "streets": [
+        "Mack Avenue",
+        "Chalfonte Avenue"
+      ]
+    },
+    {
+      "lat": 42.40208,
+      "lon": -82.92376,
+      "km": 2.46,
+      "streets": [
+        "Guilford Street",
+        "Woodhall Street"
+      ]
+    },
+    {
+      "lat": 42.40997,
+      "lon": -82.92469,
+      "km": 2.38,
+      "streets": [
+        "Hereford Street"
+      ]
+    }
+  ],
+  "Grosse Pointe Farms": [
+    {
+      "lat": 42.40914,
+      "lon": -82.89938,
+      "km": 4.25,
+      "streets": [
+        "Kerby Road",
+        "Ridgemont Road"
+      ]
+    },
+    {
+      "lat": 42.4073,
+      "lon": -82.90421,
+      "km": 3.71,
+      "streets": [
+        "Beaupre Avenue",
+        "Stephens Road"
+      ]
+    },
+    {
+      "lat": 42.38507,
+      "lon": -82.92293,
+      "km": 3.36,
+      "streets": [
+        "Saint Paul Street"
+      ]
+    },
+    {
+      "lat": 42.42134,
+      "lon": -82.88117,
+      "km": 3.27,
+      "streets": [
+        "Lake Shore Road"
+      ]
+    },
+    {
+      "lat": 42.40816,
+      "lon": -82.90933,
+      "km": 2.97,
+      "streets": [
+        "Chalfonte Avenue",
+        "Webster Road"
+      ]
+    },
+    {
+      "lat": 42.4022,
+      "lon": -82.91029,
+      "km": 2.79,
+      "streets": [
+        "McKinley Avenue",
+        "Moran Road"
+      ]
+    },
+    {
+      "lat": 42.4235,
+      "lon": -82.88064,
+      "km": 2.78,
+      "streets": [
+        "Lake Shore Road"
+      ]
+    },
+    {
+      "lat": 42.40158,
+      "lon": -82.8976,
+      "km": 2.76,
+      "streets": [
+        "Cloverly Road",
+        "Lothrop Road"
+      ]
+    }
+  ],
+  "Grosse Pointe Shores": [
+    {
+      "lat": 42.44498,
+      "lon": -82.89051,
+      "km": 7.28,
+      "streets": [
+        "Roslyn Road",
+        "Hampton Road"
+      ]
+    },
+    {
+      "lat": 42.44384,
+      "lon": -82.87587,
+      "km": 3.4,
+      "streets": [
+        "Lake Shore Road",
+        "Putnam Place"
+      ]
+    },
+    {
+      "lat": 42.42134,
+      "lon": -82.88117,
+      "km": 3.27,
+      "streets": [
+        "Lake Shore Road"
+      ]
+    },
+    {
+      "lat": 42.4235,
+      "lon": -82.88064,
+      "km": 2.78,
+      "streets": [
+        "Lake Shore Road"
+      ]
+    },
+    {
+      "lat": 42.42983,
+      "lon": -82.8841,
+      "km": 2.68,
+      "streets": [
+        "Lochmoor Boulevard",
+        "Renaud Road"
+      ]
+    },
+    {
+      "lat": 42.42075,
+      "lon": -82.88379,
+      "km": 2.15,
+      "streets": [
+        "Shelden Road",
+        "South Deeplands Road"
+      ]
+    },
+    {
+      "lat": 42.44202,
+      "lon": -82.89445,
+      "km": 2.09,
+      "streets": [
+        "Anita Avenue"
+      ]
+    },
+    {
+      "lat": 42.4271,
+      "lon": -82.88459,
+      "km": 1.97,
+      "streets": [
+        "Lake Shore Lane",
+        "Oxford Road"
+      ]
+    }
+  ],
+  "Grosse Pointe Woods": [
+    {
+      "lat": 42.44498,
+      "lon": -82.89051,
+      "km": 8.69,
+      "streets": [
+        "Roslyn Road",
+        "Hampton Road"
+      ]
+    },
+    {
+      "lat": 42.43913,
+      "lon": -82.91331,
+      "km": 6.13,
+      "streets": [
+        "Helen Avenue",
+        "Jackson Avenue"
+      ]
+    },
+    {
+      "lat": 42.42855,
+      "lon": -82.91651,
+      "km": 4.22,
+      "streets": [
+        "Littlestone Road",
+        "Stanhope Street"
+      ]
+    },
+    {
+      "lat": 42.44871,
+      "lon": -82.89864,
+      "km": 4.19,
+      "streets": [
+        "Aline Drive",
+        "Brys Drive"
+      ]
+    },
+    {
+      "lat": 42.44111,
+      "lon": -82.91284,
+      "km": 3.57,
+      "streets": [
+        "Fleetwood Drive",
+        "Beaufait Drive"
+      ]
+    },
+    {
+      "lat": 42.44702,
+      "lon": -82.88507,
+      "km": 3.52,
+      "streets": [
+        "Canterbury Road",
+        "Moorland Drive"
+      ]
+    },
+    {
+      "lat": 42.43065,
+      "lon": -82.8958,
+      "km": 3.36,
+      "streets": [
+        "South Oxford Road",
+        "North Oxford Road"
+      ]
+    },
+    {
+      "lat": 42.44202,
+      "lon": -82.89445,
+      "km": 3.26,
+      "streets": [
+        "Anita Avenue",
+        "Vernier Road"
+      ]
+    }
+  ]
+}

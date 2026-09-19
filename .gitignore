@@ -1,0 +1,12 @@
+# Secrets & private data — never committed
+tokens/
+data/tracks/
+data/rotated_tokens.json
+
+# Build output (deployed to GitHub Pages by Actions, not committed)
+dashboard.html
+
+# Python
+__pycache__/
+*.pyc
+venv/
