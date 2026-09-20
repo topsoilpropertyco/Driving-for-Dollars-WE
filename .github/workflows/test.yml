@@ -51,3 +51,5 @@ jobs:
                   module[name]()
               print(f'{path}: passed')
           PY
+      - name: Run private Worker import contract with a synthetic D1 double
+        run: node tests/worker_import_contract.mjs

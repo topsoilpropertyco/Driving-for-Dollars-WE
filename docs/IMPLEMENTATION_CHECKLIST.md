@@ -14,6 +14,7 @@
 - [x] Implement and test local transactional persistence for synthetic household actions.
 - [x] Implement and test a local authenticated API contract over household persistence.
 - [x] Build an unprovisioned private Cloudflare Worker/D1/R2 deployment package.
+- [x] Exercise the private Worker import API against a synthetic D1 contract double.
 - [ ] Approve an external recorder pilot.
 
 ## Before production data
