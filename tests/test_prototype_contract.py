@@ -14,6 +14,7 @@ def test_prototype_has_no_external_recording_endpoint_or_private_track_data():
     text = (ROOT / "prototype.html").read_text().lower()
     for forbidden in ("strava.com", "owntracks", "traccar", "access_token", "refresh_token"):
         assert forbidden not in text
+    assert "openstreetmap.org" in text
 
 
 def test_docs_record_automatic_transfer_as_the_normal_flow():
