@@ -174,7 +174,7 @@ TEMPLATE = """<!DOCTYPE html>
   #geoNotice{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1000;background:#333;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;display:none;box-shadow:0 2px 8px rgba(0,0,0,.3);max-width:80%}
 </style></head>
 <body><div id="wrap">
-<div id="sidebar">__SIDEBAR__<div class="legend">City boundaries are colored red&rarr;yellow&rarr;green by combined street coverage. <b style="color:#ff2d55">Glowing red streets</b> are undriven — toggle them with the layer control (top right). Tap <b>📍</b> on the map to show your live location, then <b>Start here</b> under "Where to drive next" to get a starting corner. Click a city for its stats. ★ marks Henry's priority cities.</div></div>
+<div id="sidebar">__SIDEBAR__<div class="legend">City boundaries are colored red&rarr;yellow&rarr;green by combined street coverage. <b style="color:#ff2d55">Glowing red streets</b> are undriven — toggle them with the layer control (top right). Tap <b>📍</b> on the map to show your live location, then <b>Start here</b> under "Where to drive next" to get a starting corner. Click a city for its stats. ★ marks Seth's priority cities.</div></div>
 <div id="map"><div id="geoNotice"></div></div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

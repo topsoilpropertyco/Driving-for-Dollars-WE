@@ -5,6 +5,15 @@ data/rotated_tokens.json
 
 # Build output (deployed to GitHub Pages by Actions, not committed)
 dashboard.html
+prototype-state.json
+
+# Local prototype and private import material
+data/imports/
+data/private/
+*.gpx
+*.fit
+*.xlsx
+*.csv
 
 # Python
 __pycache__/

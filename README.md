@@ -1,5 +1,11 @@
 # Grosse Pointe Driving Coverage Tracker
 
+> **Implementation status:** the original dashboard is a geographic prototype.
+> The active product direction is documented in [the master plan](docs/MASTER_PLAN.md),
+> with the recording decision in [the recording feasibility plan](docs/RECORDING_FEASIBILITY.md).
+> Claims below about an existing workflow or deployment are historical intent until
+> implemented and verified.
+
 Seth and Claire are hunting their next primary home in the Grosse Pointes, Michigan —
 not by scrolling listings, but by **driving 100% of the streets** in five adjacent
 cities and learning the neighborhoods block by block ("driving for dollars").
