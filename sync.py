@@ -11,6 +11,7 @@ import glob
 import json
 import os
 import sys
+import tempfile
 import time
 
 import requests
@@ -19,6 +20,16 @@ from strava_auth import load_config, load_tokens, refresh
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
+PRIVATE_SYNC_SENTINEL = "ALLOW_PRIVATE_STRAVA_SYNC"
+
+
+def require_explicit_private_sync_authorization():
+    """Prevent an accidental CLI run from contacting private activity data."""
+    if os.environ.get(PRIVATE_SYNC_SENTINEL) != "1":
+        sys.exit(
+            "Private Strava sync is disabled by default. Run only after approval "
+            f"with {PRIVATE_SYNC_SENTINEL}=1. Cached data was not changed."
+        )
 
 
 def load_index(path):
@@ -28,7 +39,26 @@ def load_index(path):
     return []
 
 
+def write_json_atomically(path, value):
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=".sync-", suffix=".json", dir=directory)
+    try:
+        with os.fdopen(fd, "w") as handle:
+            json.dump(value, handle, indent=2)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
 def main():
+    require_explicit_private_sync_authorization()
     cfg = load_config()
     paths = cfg["paths"]
     tracks_dir = os.path.join(BASE, paths["tracks_dir"])
@@ -46,8 +76,8 @@ def main():
             continue
         try:
             token = refresh(athlete)
-        except Exception as e:
-            print(f"[{athlete}] token refresh failed: {e} (skipping)")
+        except Exception:
+            print(f"[{athlete}] token refresh failed; preserving cache and skipping")
             continue
         headers = {"Authorization": f"Bearer {token}"}
         page, new_count = 1, 0
@@ -95,8 +125,7 @@ def main():
                     "distance_m": a.get("distance"),
                     "latlng": latlng,
                 }
-                with open(os.path.join(tracks_dir, f"{athlete}_{aid}.json"), "w") as f:
-                    json.dump(track, f)
+                write_json_atomically(os.path.join(tracks_dir, f"{athlete}_{aid}.json"), track)
                 index.append(
                     {
                         "id": aid,
@@ -108,15 +137,14 @@ def main():
                 )
                 known.add((athlete, aid))
                 new_count += 1
-                print(f"[{athlete}] + {a.get('name')} ({len(latlng)} points)")
+                print(f"[{athlete}] saved one new private ride")
             if len(acts) < 200:
                 break
             page += 1
         print(f"[{athlete}] done: {new_count} new ride(s)")
 
-    with open(index_path, "w") as f:
-        json.dump(index, f, indent=2)
-    print(f"index: {len(index)} activit(ies) total")
+    write_json_atomically(index_path, index)
+    print("private activity index updated")
 
 
 if __name__ == "__main__":

@@ -37,6 +37,16 @@ close a session; points received afterward require a new session or review.
 No candidate is selected or connected yet. The web app itself is not the
 background recorder.
 
+## Current repository safety gate
+
+Private Strava synchronization is disabled by default. `sync.py` exits before
+loading configuration or contacting Strava unless the caller explicitly sets
+`ALLOW_PRIVATE_STRAVA_SYNC=1`. `run_all.sh` likewise skips sync unless called
+with `--sync-private`; it never installs packages automatically. Sync writes
+private caches and its activity index with atomic replacement, and routine
+status output does not print activity names, identifiers, locations, tokens,
+or response bodies.
+
 ## Pilot acceptance checklist
 
 - [ ] Both phones can start and stop in under ten seconds.

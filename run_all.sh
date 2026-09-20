@@ -1,21 +1,34 @@
 #!/bin/bash
-# Full pipeline: sync Strava -> streets (cached) -> coverage -> undriven -> dashboard
+# Full pipeline. Private Strava sync is deliberately opt-in.
 set -e
 cd "$(dirname "$0")"
 
-# Always use the project venv (has requests, shapely, pyproj, pyyaml).
+# A caller chooses setup explicitly; this script never installs packages.
 if [ ! -x "venv/bin/python" ]; then
-  echo "Creating venv and installing requirements..."
-  python3 -m venv venv
-  venv/bin/pip install -q -r requirements.txt
+  echo "Missing venv/bin/python. Set up dependencies separately, then re-run."
+  exit 2
 fi
 PY="venv/bin/python"
 
-echo "=== 1/5 sync.py (Strava) ==="
-$PY sync.py
+SYNC_PRIVATE=0
+REFRESH_STREETS=0
+for arg in "$@"; do
+  case "$arg" in
+    --sync-private) SYNC_PRIVATE=1 ;;
+    --refresh-streets) REFRESH_STREETS=1 ;;
+    *) echo "Unknown option: $arg"; exit 2 ;;
+  esac
+done
+
+if [ "$SYNC_PRIVATE" -eq 1 ]; then
+  echo "=== 1/5 private Strava sync ==="
+  ALLOW_PRIVATE_STRAVA_SYNC=1 $PY sync.py
+else
+  echo "=== 1/5 private Strava sync skipped (use --sync-private after approval) ==="
+fi
 
 echo "=== 2/5 streets.py (OSM street networks, cached) ==="
-if [ "$1" == "--refresh-streets" ]; then
+if [ "$REFRESH_STREETS" -eq 1 ]; then
   $PY streets.py --refresh-streets
 else
   $PY streets.py
