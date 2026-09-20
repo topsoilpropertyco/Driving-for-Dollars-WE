@@ -1,7 +1,7 @@
 """Tests for the no-write property import planning boundary."""
 from pathlib import Path
 
-from property_import import plan_csv, plan_rows
+from property_import import plan_csv, plan_file, plan_rows
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,3 +39,17 @@ def test_address_only_identity_is_never_auto_matched():
     plan = plan_rows("fixture", rows[0].keys(), rows)
     assert plan.records[0].identity_kind == "address_candidate"
     assert plan.records[0].review_required is True
+
+
+def test_fingerprint_changes_when_the_normalized_identity_changes():
+    headers = ("APN", "County", "State")
+    first = plan_rows("fixture", headers, [{"APN": "1", "County": "Wayne", "State": "MI"}])
+    second = plan_rows("fixture", headers, [{"APN": "2", "County": "Wayne", "State": "MI"}])
+    assert first.source_fingerprint != second.source_fingerprint
+
+
+def test_synthetic_xlsx_uses_the_same_identity_and_review_rules_as_csv():
+    plan = plan_file(ROOT / "tests" / "fixtures" / "synthetic_properties.xlsx", "synthetic-provider")
+    assert plan.summary()["accepted"] == 3
+    assert plan.summary()["rejected"] == 2
+    assert plan.summary()["review_required"] == 1

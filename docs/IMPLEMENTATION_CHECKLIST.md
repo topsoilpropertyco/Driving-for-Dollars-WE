@@ -23,6 +23,8 @@
 - [x] Define CSV identity, provenance, dry-run, and no-overwrite contract.
 - [x] Add synthetic CSV import-plan validation and privacy regression tests.
 - [x] Run a dry import with synthetic data only.
+- [x] Support CSV and XLSX synthetic dry-run planning with identical identity safeguards.
+- [x] Implement resumable synthetic import-plan staging without provider values.
 - [ ] Implement protected, resumable CSV/XLSX import application after approval.
 
 ## Before release

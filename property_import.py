@@ -14,9 +14,11 @@ import hashlib
 import json
 import re
 from collections import Counter
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping
+
+from openpyxl import load_workbook
 
 
 HEADER_ALIASES = {
@@ -91,9 +93,21 @@ class ImportPlan:
         }
 
 
-def _fingerprint(source_name: str, fieldnames: Iterable[str | None], count: int) -> str:
-    # This identifies the import shape for audit/idempotency without retaining data.
-    material = "\x1f".join([source_name, *sorted(_header(name) for name in fieldnames), str(count)])
+def _fingerprint(
+    source_name: str,
+    fieldnames: Iterable[str | None],
+    records: Iterable[PlannedRecord],
+    rejected: Iterable[RejectedRow],
+) -> str:
+    """Create an idempotency key from normalized identities, never raw provider fields."""
+    planned = sorted(
+        f"accept:{record.row_number}:{record.identity_kind}:{record.identity_key}:{int(record.review_required)}"
+        for record in records
+    )
+    refused = sorted(
+        f"reject:{row.row_number}:{row.code}:{','.join(row.fields)}" for row in rejected
+    )
+    material = "\x1f".join([source_name, *sorted(_header(name) for name in fieldnames), *planned, *refused])
     return hashlib.sha256(material.encode("utf-8")).hexdigest()[:16]
 
 
@@ -132,7 +146,7 @@ def plan_rows(source_name: str, fieldnames: Iterable[str | None], rows: Iterable
 
     return ImportPlan(
         source_name=source_name,
-        source_fingerprint=_fingerprint(source_name, names, row_count),
+        source_fingerprint=_fingerprint(source_name, names, accepted, rejected),
         recognized_headers=tuple(sorted(headers)),
         records=tuple(accepted),
         rejected=tuple(rejected),
@@ -147,12 +161,38 @@ def plan_csv(path: Path, source_name: str) -> ImportPlan:
         return plan_rows(source_name, reader.fieldnames, reader)
 
 
+def plan_xlsx(path: Path, source_name: str, sheet_name: str | None = None) -> ImportPlan:
+    """Plan one XLSX worksheet in read-only mode without writing a workbook."""
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    try:
+        sheet = workbook[sheet_name] if sheet_name else workbook.active
+        rows = sheet.iter_rows(values_only=True)
+        header = next(rows, None)
+        if not header or not any(_text(value) for value in header):
+            raise ValueError("XLSX sheet has no header row")
+        names = [_text(value) for value in header]
+        mapped_rows = ({name: value for name, value in zip(names, values)} for values in rows)
+        return plan_rows(source_name, names, mapped_rows)
+    finally:
+        workbook.close()
+
+
+def plan_file(path: Path, source_name: str, sheet_name: str | None = None) -> ImportPlan:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        return plan_csv(path, source_name)
+    if suffix == ".xlsx":
+        return plan_xlsx(path, source_name, sheet_name)
+    raise ValueError("only CSV and XLSX files are supported")
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Validate a property CSV without importing it")
+    parser = argparse.ArgumentParser(description="Validate a property CSV/XLSX file without importing it")
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--source", required=True, help="Provider label, e.g. propstream-export")
+    parser.add_argument("--sheet", help="XLSX worksheet name; defaults to the active worksheet")
     args = parser.parse_args()
-    plan = plan_csv(args.input, args.source)
+    plan = plan_file(args.input, args.source, args.sheet)
     # Deliberately output aggregate diagnostics only.
     print(json.dumps(plan.summary(), indent=2, sort_keys=True))
 

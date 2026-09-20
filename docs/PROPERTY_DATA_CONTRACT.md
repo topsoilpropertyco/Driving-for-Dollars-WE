@@ -40,15 +40,27 @@ store private property and owner data.
 Canonical fields accept common aliases: APN/parcel number, address/property
 address, unit, city, state, zip, and county. Unknown columns are preserved as
 provider fields by the future private importer but are not used to identify a
-property. CSV is the first supported format. XLSX parsing is deferred until the
-protected service and review flow exist; it must use the same import plan and
-must not bypass validation.
+property. CSV and XLSX are supported by the no-write planner; XLSX reads one
+worksheet in read-only mode and applies the exact same identity/review rules.
+Applying either format to private storage remains blocked until the protected
+service and review flow exist.
+
+## Resumable review staging
+
+`property_import_store.py` can stage a dry-run plan in the private local store
+and advance it in bounded batches. It retains only row number, normalized
+identity, review requirement, and source field names. It never stores provider
+values, so it is safe for synthetic plan testing and cannot accidentally become
+an owner/contact database. A staged run is idempotent by source/fingerprint and
+ends as `ready_for_review`; a separate approved production apply step is still
+required before any provider values may enter private storage.
 
 ## Operational safeguards
 
 - Diagnostics use row numbers and field names, never values.
-- Import fingerprints describe the provider, header shape, and row count, not
-  row contents; they support review and idempotency without leaking data.
+- Import fingerprints describe the provider, header shape, and a one-way hash
+  of normalized identity/rejection structure. They never retain raw provider
+  fields, but a changed identity cannot be mistaken for the prior import.
 - Invalid rows do not block valid rows in a dry run, but a production apply
   must be explicitly reviewed if any rejections or address candidates exist.
 - Exports will be an explicit protected action with a user-selected scope; no

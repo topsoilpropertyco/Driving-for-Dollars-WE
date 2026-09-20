@@ -14,7 +14,9 @@ data/private/
 *.fit
 *.xlsx
 *.csv
+*.inspect.ndjson
 !tests/fixtures/*.csv
+!tests/fixtures/*.xlsx
 
 # Python
 __pycache__/
