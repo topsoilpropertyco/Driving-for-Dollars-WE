@@ -22,8 +22,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const props=[['1257 Berkshire Rd','Saved / no outreach','PropStream + parcel pending','Revisit the block'],['410 University Pl','In conversation','PropStream','Follow up Friday'],['35 Merriweather Rd','Saved / no outreach','PropStream','Review notes'],['811 Lake Shore Rd','Passed / archived','PropStream','—']];let selected='1257 Berkshire Rd',saved=12,recording=false;const titles={explore:'Explore with intention',properties:'Properties worth knowing',funnel:'A clear path forward',data:'Data you can trust'};
-const canvas=document.querySelector('.map');canvas.id='mapCanvas';canvas.innerHTML='';
-const map=L.map('mapCanvas',{zoomControl:false,attributionControl:true}).setView([42.426,-82.896],13);
+const mapElement=document.querySelector('.map');mapElement.replaceChildren();
+const map=L.map(mapElement,{zoomControl:false,attributionControl:true}).setView([42.426,-82.896],13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
 const undriven=L.polyline([[42.432,-82.903],[42.428,-82.899],[42.424,-82.896],[42.419,-82.891]],{color:'#e24b5b',weight:5,opacity:.9,dashArray:'8 9'}).addTo(map);
