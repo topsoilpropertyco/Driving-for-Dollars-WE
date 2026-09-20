@@ -9,6 +9,7 @@
 - [x] Add a synthetic-only mobile preview deployment workflow.
 - [x] Complete initial phone map review; real-map baseline approved for continued refinement.
 - [x] Add an explicit private-sync gate and atomic private-cache writes.
+- [x] Run synthetic privacy, import, and road fixtures automatically in CI.
 - [ ] Approve an external recorder pilot.
 
 ## Before production data
