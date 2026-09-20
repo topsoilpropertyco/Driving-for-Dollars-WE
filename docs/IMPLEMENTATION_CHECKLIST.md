@@ -12,6 +12,7 @@
 - [x] Run synthetic privacy, import, and road fixtures automatically in CI.
 - [x] Define and test the offline, idempotent household action contract.
 - [x] Implement and test local transactional persistence for synthetic household actions.
+- [x] Implement and test a local authenticated API contract over household persistence.
 - [ ] Approve an external recorder pilot.
 
 ## Before production data
@@ -29,7 +30,7 @@
 - [x] Share canonical road intervals between coverage and undriven output.
 - [x] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
 - [ ] Complete the recorder pilot.
-- [ ] Wrap household persistence in an approved authenticated private API and phone-side offline queue.
+- [ ] Deploy the approved authenticated private API and phone-side offline queue.
 - [ ] Complete two-device field usability testing.
 - [ ] Approve external hosting and deployment.
 - [ ] Import real property data only after review.

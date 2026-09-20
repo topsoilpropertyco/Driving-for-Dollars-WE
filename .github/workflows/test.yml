@@ -41,6 +41,7 @@ jobs:
               'tests/test_artifact_io.py',
               'tests/test_household_actions.py',
               'tests/test_household_store.py',
+              'tests/test_household_api.py',
           )
           for path in paths:
               module = runpy.run_path(path)
