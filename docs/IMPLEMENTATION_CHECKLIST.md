@@ -10,6 +10,7 @@
 - [x] Complete initial phone map review; real-map baseline approved for continued refinement.
 - [x] Add an explicit private-sync gate and atomic private-cache writes.
 - [x] Run synthetic privacy, import, and road fixtures automatically in CI.
+- [x] Define and test the offline, idempotent household action contract.
 - [ ] Approve an external recorder pilot.
 
 ## Before production data
@@ -27,7 +28,7 @@
 - [x] Share canonical road intervals between coverage and undriven output.
 - [x] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
 - [ ] Complete the recorder pilot.
-- [ ] Implement household CRM and offline queue.
+- [ ] Implement protected household CRM persistence and phone-side offline queue.
 - [ ] Complete two-device field usability testing.
 - [ ] Approve external hosting and deployment.
 - [ ] Import real property data only after review.
