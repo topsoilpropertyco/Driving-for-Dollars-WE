@@ -10,13 +10,13 @@ import datetime
 import glob
 import json
 import os
-import tempfile
 
 import yaml
 from pyproj import Transformer
 from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import unary_union
 
+from artifact_io import write_json_atomically
 from road_network import canonical_network
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -63,24 +63,6 @@ def load_boundary_poly(slug_):
             rings = [[T.transform(lon, lat) for lon, lat in ring] for ring in g["coordinates"]]
             polys.append(Polygon(rings[0], rings[1:]))
     return unary_union(polys) if polys else None
-
-
-def write_json_atomically(path, value):
-    """Replace a generated artifact only after its complete JSON is durable."""
-    directory = os.path.dirname(path)
-    fd, temporary = tempfile.mkstemp(prefix=".coverage-", suffix=".json", dir=directory)
-    try:
-        with os.fdopen(fd, "w") as handle:
-            json.dump(value, handle, indent=2)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    except Exception:
-        try:
-            os.unlink(temporary)
-        except FileNotFoundError:
-            pass
-        raise
 
 
 def main():

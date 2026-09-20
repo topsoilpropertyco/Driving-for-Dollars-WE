@@ -23,6 +23,8 @@ import os
 
 import yaml
 
+from artifact_io import write_text_atomically
+
 BASE = os.path.dirname(os.path.abspath(__file__))
 
 DRIVER_COLOR = {"seth": "#1e6fff", "claire": "#ff7f0e"}
@@ -427,8 +429,7 @@ overlays["Claire's drives"] = driverLayers.claire;"""
             .replace("__STARTHERE__", json.dumps(starthere))
             .replace("__SIDEBAR__", sidebar_html(cov, cities, priority, sync_time, athletes)))
     out = os.path.join(BASE, cfg["paths"]["dashboard"])
-    with open(out, "w") as f:
-        f.write(html)
+    write_text_atomically(out, html)
     print(f"wrote {out} ({os.path.getsize(out) / 1024:.0f} KB, {len(tracks)} tracks)")
 
 

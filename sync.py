@@ -11,11 +11,11 @@ import glob
 import json
 import os
 import sys
-import tempfile
 import time
 
 import requests
 
+from artifact_io import write_json_atomically
 from strava_auth import load_config, load_tokens, refresh
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -37,24 +37,6 @@ def load_index(path):
         with open(path) as f:
             return json.load(f)
     return []
-
-
-def write_json_atomically(path, value):
-    directory = os.path.dirname(path)
-    os.makedirs(directory, exist_ok=True)
-    fd, temporary = tempfile.mkstemp(prefix=".sync-", suffix=".json", dir=directory)
-    try:
-        with os.fdopen(fd, "w") as handle:
-            json.dump(value, handle, indent=2)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    except Exception:
-        try:
-            os.unlink(temporary)
-        except FileNotFoundError:
-            pass
-        raise
 
 
 def main():

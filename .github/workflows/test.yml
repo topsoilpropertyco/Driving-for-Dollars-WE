@@ -38,6 +38,7 @@ jobs:
               'tests/test_prototype_contract.py',
               'tests/test_property_import.py',
               'tests/test_road_network.py',
+              'tests/test_artifact_io.py',
           )
           for path in paths:
               module = runpy.run_path(path)

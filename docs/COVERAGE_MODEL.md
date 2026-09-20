@@ -43,8 +43,7 @@ synthetic geometries:
 
 ## Output safety
 
-`coverage.json` now uses a same-directory temporary file and atomic replacement.
-An interrupted coverage run therefore leaves the last complete artifact in
-place rather than replacing it with partial JSON. The same rule must be applied
-to undriven and dashboard artifacts before automated production runs are
-enabled.
+`coverage.json`, undriven GeoJSON/start-area output, dashboard HTML, and
+private sync-cache writes use a same-directory temporary file and atomic
+replacement. An interrupted run therefore leaves the last complete artifact in
+place rather than replacing it with partial output.

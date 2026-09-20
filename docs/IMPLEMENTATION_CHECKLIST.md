@@ -23,7 +23,7 @@
 
 ## Before release
 
-- [x] Measure coverage against a deduplicated road network and atomically replace coverage output.
+- [x] Measure coverage against a deduplicated road network and atomically replace all pipeline artifacts.
 - [x] Share canonical road intervals between coverage and undriven output.
 - [x] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
 - [ ] Complete the recorder pilot.

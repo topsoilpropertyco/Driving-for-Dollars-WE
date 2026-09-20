@@ -23,6 +23,7 @@ from pyproj import Transformer
 from shapely.geometry import LineString
 from shapely.ops import unary_union
 
+from artifact_io import write_json_atomically
 from road_network import canonical_feature_parts, line_parts
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -133,8 +134,10 @@ def main():
                 "geometry": {"type": "LineString",
                              "coordinates": [[round(lon, 5), round(lat, 5)] for lon, lat in ll]},
             })
-        with open(os.path.join(undir, f"{s}.geojson"), "w") as f:
-            json.dump({"type": "FeatureCollection", "features": out_feats}, f)
+        write_json_atomically(
+            os.path.join(undir, f"{s}.geojson"),
+            {"type": "FeatureCollection", "features": out_feats},
+        )
 
         clusters = hotspot_cells(segs)
         starthere[city] = clusters
@@ -144,8 +147,7 @@ def main():
               f"{undriven_km:.1f} km ({named} named), {len(clusters)} hotspots")
 
     shp = os.path.join(BASE, cfg["paths"]["starthere"])
-    with open(shp, "w") as f:
-        json.dump(starthere, f, indent=2)
+    write_json_atomically(shp, starthere)
     print(f"wrote {shp}")
 
 
