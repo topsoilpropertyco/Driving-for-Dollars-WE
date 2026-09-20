@@ -120,6 +120,11 @@ async function advanceImportPlan(request, env, importId) {
   return json(await importProgress(importId, env));
 }
 
+async function getImportPlan(env, importId) {
+  const progress = await importProgress(importId, env);
+  return progress ? json(progress) : json({ error: "not_found" }, 404);
+}
+
 async function actions(request, env) {
   const length = Number(request.headers.get("content-length") || 0);
   if (!Number.isFinite(length) || length < 1 || length > MAX_BODY_BYTES) return json({ error: "invalid_request" }, 400);
@@ -164,6 +169,8 @@ export default {
       if (request.method === "POST" && url.pathname === "/api/v1/import-plans") return stageImportPlan(request, env);
       const advance = url.pathname.match(/^\/api\/v1\/import-plans\/([^/]+)\/advance$/);
       if (request.method === "POST" && advance && IMPORT_ID.test(advance[1])) return advanceImportPlan(request, env, advance[1]);
+      const importStatus = url.pathname.match(/^\/api\/v1\/import-plans\/([^/]+)$/);
+      if (request.method === "GET" && importStatus && IMPORT_ID.test(importStatus[1])) return getImportPlan(env, importStatus[1]);
       if (request.method === "GET" && url.pathname.startsWith("/api/v1/properties/")) return property(decodeURIComponent(url.pathname.slice("/api/v1/properties/".length)), env);
     } catch {
       // Avoid returning raw database or payload details to clients or logs.

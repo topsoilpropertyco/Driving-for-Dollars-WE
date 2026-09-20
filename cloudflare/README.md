@@ -35,7 +35,8 @@ secret/configuration mechanisms—not by committing them to this repository.
 ## Import-plan API boundary
 
 The Worker has a private `POST /api/v1/import-plans` endpoint for a sanitized
-dry-run plan and `POST /api/v1/import-plans/{id}/advance` for bounded review
+dry-run plan, `GET /api/v1/import-plans/{id}` for reconnect-safe aggregate
+progress, and `POST /api/v1/import-plans/{id}/advance` for bounded review
 staging. The request may include normalized parcel/address identities, row
 numbers, field *names*, and aggregate rejection counts. It deliberately cannot
 accept raw spreadsheet rows, owner names, phone numbers, emails, or other

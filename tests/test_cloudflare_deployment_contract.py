@@ -34,6 +34,8 @@ def test_import_plan_api_only_accepts_sanitized_staging_fields():
     assert "POST\" && url.pathname === \"/api/v1/import-plans\"" in worker
     assert "source_fields_present" in worker
     assert "identity_key" in worker
+    assert "getImportPlan" in worker
+    assert "GET\" && importStatus" in worker
     assert "owner" not in schema.lower()
     assert "phone" not in schema.lower()
     assert "email" not in schema.lower()
