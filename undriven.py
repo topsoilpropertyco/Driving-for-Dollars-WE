@@ -23,6 +23,8 @@ from pyproj import Transformer
 from shapely.geometry import LineString
 from shapely.ops import unary_union
 
+from road_network import canonical_feature_parts, line_parts
+
 BASE = os.path.dirname(os.path.abspath(__file__))
 FWD = Transformer.from_crs("EPSG:4326", "EPSG:26916", always_xy=True)
 INV = Transformer.from_crs("EPSG:26916", "EPSG:4326", always_xy=True)
@@ -52,25 +54,18 @@ def load_track_lines(cfg):
 def undriven_segments(street_feats, combined_buf):
     """Return [(utm LineString, name, highway)] of street parts outside the buffer."""
     segs = []
+    feature_lines = []
     for ft in street_feats:
         coords = ft["geometry"]["coordinates"]  # [lon, lat]
         if len(coords) < 2:
             continue
         line = LineString([FWD.transform(lon, lat) for lon, lat in coords])
-        diff = line if combined_buf is None else line.difference(combined_buf)
-        if diff.is_empty:
-            continue
-        if diff.geom_type == "LineString":
-            parts = [diff]
-        elif diff.geom_type == "MultiLineString":
-            parts = list(diff.geoms)
-        elif diff.geom_type == "GeometryCollection":
-            parts = [g for g in diff.geoms if g.geom_type == "LineString"]
-        else:
-            parts = []
-        name = ft["properties"].get("name", "") or ""
-        hw = ft["properties"].get("highway", "") or ""
-        for p in parts:
+        feature_lines.append((line, ft.get("properties", {})))
+    for road in canonical_feature_parts(feature_lines):
+        diff = road.line if combined_buf is None else road.line.difference(combined_buf)
+        name = road.properties.get("name", "") or ""
+        hw = road.properties.get("highway", "") or ""
+        for p in line_parts(diff):
             if p.length >= MIN_SEG_M:
                 segs.append((p, name, hw))
     return segs

@@ -23,8 +23,8 @@
 ## Before release
 
 - [x] Measure coverage against a deduplicated road network and atomically replace coverage output.
-- [ ] Share canonical road intervals between coverage and undriven output.
-- [ ] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
+- [x] Share canonical road intervals between coverage and undriven output.
+- [x] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
 - [ ] Complete the recorder pilot.
 - [ ] Implement household CRM and offline queue.
 - [ ] Complete two-device field usability testing.

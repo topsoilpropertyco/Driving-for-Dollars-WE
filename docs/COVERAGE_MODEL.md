@@ -14,14 +14,17 @@ from inflating the denominator or counting a duplicated segment twice. A
 crossing is still just a zero-length overlap; parallel and divided roads remain
 distinct lines.
 
-## Required next refinement
+## Shared road basis
 
-The remaining-street output (`undriven.py`) still retains OSM-feature
-provenance for names and highway tags. Before a real release, it must consume a
-shared canonical-road representation so coverage totals and glowing undriven
-segments cannot disagree when source features overlap. That representation must
-preserve a stable segment ID, city attribution, display name(s), and the
-canonical UTM line geometry.
+`road_network.py` is now the shared geometry basis for `coverage.py` and
+`undriven.py`. It deduplicates coincident source geometry, retains divided
+roads, and assigns the surviving undriven interval a deterministic name/highway
+provenance record. This makes aggregate coverage and the glowing-undriven layer
+measure the same physical linework.
+
+The next refinement before a real release is stable persisted segment IDs and
+explicit city attribution on each canonical interval, so historical coverage
+can be compared across OSM refreshes.
 
 ## Acceptance fixtures
 

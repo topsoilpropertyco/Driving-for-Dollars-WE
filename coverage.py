@@ -17,6 +17,8 @@ from pyproj import Transformer
 from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import unary_union
 
+from road_network import canonical_network
+
 BASE = os.path.dirname(os.path.abspath(__file__))
 T = Transformer.from_crs("EPSG:4326", "EPSG:26916", always_xy=True)
 KM_TO_MI = 0.621371
@@ -135,11 +137,11 @@ def main():
     for city in cfg["cities"]:
         s = slug(city)
         street_lines = load_street_lines(s)
-        network = unary_union(street_lines) if street_lines else None
+        network = canonical_network(street_lines)
         # Use the unioned network for both numerator and denominator.  This
         # makes duplicated OSM geometries contribute once, while intersections
         # and parallel/divided roads retain their independent line lengths.
-        total_m = network.length if network is not None else 0.0
+        total_m = network.length
 
         # Sessions touching this city: tracks intersecting the boundary.
         bound_poly = load_boundary_poly(s)
@@ -153,14 +155,14 @@ def main():
         per_driver = {}
         for athlete in athletes:
             driven_m = network.intersection(buffers[athlete]).length \
-                if (network is not None and buffers[athlete] is not None) else 0.0
+                if (not network.is_empty and buffers[athlete] is not None) else 0.0
             per_driver[athlete] = {
                 "driven_km": round(driven_m / 1000.0, 2),
                 "pct": round(driven_m / total_m * 100.0, 1) if total_m else 0.0,
                 "num_drives": sess[athlete],
             }
         combined_m = network.intersection(combined_buf).length \
-            if (network is not None and combined_buf is not None) else 0.0
+            if (not network.is_empty and combined_buf is not None) else 0.0
         grand_total_m += total_m
         grand_driven_m += combined_m
 
