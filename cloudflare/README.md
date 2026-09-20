@@ -31,3 +31,13 @@ secret/configuration mechanisms—not by committing them to this repository.
 4. Browser data cannot be read from a public origin or GitHub Pages.
 5. No D1/R2 endpoint is public, and no secret appears in source, logs, or CI.
 6. Only after all five pass may a reviewed real property import dry-run begin.
+
+## Import-plan API boundary
+
+The Worker has a private `POST /api/v1/import-plans` endpoint for a sanitized
+dry-run plan and `POST /api/v1/import-plans/{id}/advance` for bounded review
+staging. The request may include normalized parcel/address identities, row
+numbers, field *names*, and aggregate rejection counts. It deliberately cannot
+accept raw spreadsheet rows, owner names, phone numbers, emails, or other
+provider values. A separate reviewed importer is required before any of those
+values may enter D1 or R2.

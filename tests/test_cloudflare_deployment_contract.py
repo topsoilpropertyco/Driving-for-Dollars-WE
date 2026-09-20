@@ -26,3 +26,15 @@ def test_private_schema_and_readme_keep_gps_storage_private():
     assert "household_actions" in schema
     assert "no public bucket endpoint" in readme
     assert "approval" in readme
+
+
+def test_import_plan_api_only_accepts_sanitized_staging_fields():
+    worker = (ROOT / "cloudflare" / "worker.js").read_text()
+    schema = (ROOT / "cloudflare" / "migrations" / "0002_import_plan_staging.sql").read_text()
+    assert "POST\" && url.pathname === \"/api/v1/import-plans\"" in worker
+    assert "source_fields_present" in worker
+    assert "identity_key" in worker
+    assert "owner" not in schema.lower()
+    assert "phone" not in schema.lower()
+    assert "email" not in schema.lower()
+    assert "import_plan_records" in schema

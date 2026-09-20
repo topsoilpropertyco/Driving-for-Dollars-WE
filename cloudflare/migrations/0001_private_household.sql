@@ -16,8 +16,9 @@ CREATE TABLE IF NOT EXISTS import_runs (
   import_id TEXT PRIMARY KEY,
   source_name TEXT NOT NULL,
   source_fingerprint TEXT NOT NULL,
-  status TEXT NOT NULL CHECK (status IN ('dry_run', 'applied', 'rejected')),
+  status TEXT NOT NULL CHECK (status IN ('staged', 'ready_for_review', 'applied', 'rejected')),
   created_at TEXT NOT NULL,
   accepted_count INTEGER NOT NULL DEFAULT 0,
-  rejected_count INTEGER NOT NULL DEFAULT 0
+  rejected_count INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(source_name, source_fingerprint)
 );
