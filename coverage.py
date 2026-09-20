@@ -10,6 +10,7 @@ import datetime
 import glob
 import json
 import os
+import tempfile
 
 import yaml
 from pyproj import Transformer
@@ -60,6 +61,24 @@ def load_boundary_poly(slug_):
             rings = [[T.transform(lon, lat) for lon, lat in ring] for ring in g["coordinates"]]
             polys.append(Polygon(rings[0], rings[1:]))
     return unary_union(polys) if polys else None
+
+
+def write_json_atomically(path, value):
+    """Replace a generated artifact only after its complete JSON is durable."""
+    directory = os.path.dirname(path)
+    fd, temporary = tempfile.mkstemp(prefix=".coverage-", suffix=".json", dir=directory)
+    try:
+        with os.fdopen(fd, "w") as handle:
+            json.dump(value, handle, indent=2)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
 
 
 def main():
@@ -116,8 +135,11 @@ def main():
     for city in cfg["cities"]:
         s = slug(city)
         street_lines = load_street_lines(s)
-        total_m = sum(ln.length for ln in street_lines)
         network = unary_union(street_lines) if street_lines else None
+        # Use the unioned network for both numerator and denominator.  This
+        # makes duplicated OSM geometries contribute once, while intersections
+        # and parallel/divided roads retain their independent line lengths.
+        total_m = network.length if network is not None else 0.0
 
         # Sessions touching this city: tracks intersecting the boundary.
         bound_poly = load_boundary_poly(s)
@@ -191,8 +213,7 @@ def main():
         "leaderboard": board,
     }
     out_path = os.path.join(BASE, cfg["paths"]["coverage"])
-    with open(out_path, "w") as f:
-        json.dump(out, f, indent=2)
+    write_json_atomically(out_path, out)
     print(f"wrote {out_path}")
     for city, c in cities_out.items():
         print(f"  {city}: {c['combined_pct']}% ({c['combined_driven_km']}/{c['total_km']} km)")

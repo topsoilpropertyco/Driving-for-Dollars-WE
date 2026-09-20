@@ -21,7 +21,9 @@
 
 ## Before release
 
-- [ ] Normalize roads and implement interval coverage.
+- [x] Measure coverage against a deduplicated road network and atomically replace coverage output.
+- [ ] Share canonical road intervals between coverage and undriven output.
+- [ ] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
 - [ ] Complete the recorder pilot.
 - [ ] Implement household CRM and offline queue.
 - [ ] Complete two-device field usability testing.
