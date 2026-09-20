@@ -37,6 +37,8 @@ The UI may use friendlier labels, but the stored values stay stable.
 ## Current boundary
 
 `household_actions.py` validates synthetic action envelopes and retry behavior.
-There is no device storage, API endpoint, login, production action, or private
-data connection yet. Building those requires the approved protected household
-service.
+The public prototype now demonstrates this with a **synthetic-only browser
+queue**: saved prototype actions persist in local browser storage and can be
+cleared explicitly, but are never sent anywhere. There is still no API endpoint,
+login, production action, or private-data connection. Building those requires
+the approved protected household service.

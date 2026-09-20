@@ -11,10 +11,18 @@ def test_prototype_is_explicitly_synthetic_and_has_core_views():
 
 
 def test_prototype_has_no_external_recording_endpoint_or_private_track_data():
-    text = (ROOT / "prototype.html").read_text().lower()
+    text = ((ROOT / "prototype.html").read_text() + (ROOT / "prototype_queue.js").read_text()).lower()
     for forbidden in ("strava.com", "owntracks", "traccar", "access_token", "refresh_token"):
         assert forbidden not in text
     assert "openstreetmap.org" in text
+
+
+def test_prototype_queue_is_explicitly_local_and_synthetic():
+    text = (ROOT / "prototype_queue.js").read_text().lower()
+    assert "localstorage" in text
+    assert "synthetic-only" in text
+    assert "fetch(" not in text
+    assert "xmlhttprequest" not in text
 
 
 def test_docs_record_automatic_transfer_as_the_normal_flow():

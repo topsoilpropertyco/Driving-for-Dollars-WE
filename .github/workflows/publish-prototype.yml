@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - prototype.html
+      - prototype_queue.js
       - tests/test_prototype_contract.py
       - .github/workflows/publish-prototype.yml
   workflow_dispatch:
@@ -39,6 +40,7 @@ jobs:
         run: |
           mkdir -p public
           cp prototype.html public/index.html
+          cp prototype_queue.js public/prototype_queue.js
           touch public/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
