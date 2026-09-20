@@ -2,6 +2,10 @@ name = "five-pointes-private"
 main = "worker.js"
 compatibility_date = "2026-09-20"
 
+[assets]
+directory = "./private_app"
+binding = "ASSETS"
+
 # Bindings are intentionally declared without account IDs, database IDs, bucket
 # names, emails, tokens, or secrets. Provisioning fills these in outside Git.
 [[d1_databases]]

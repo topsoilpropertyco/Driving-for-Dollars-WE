@@ -15,6 +15,9 @@ committed.
 - D1 stores household actions and future private import metadata.
 - R2 stores private raw GPS/session files. It has no public bucket endpoint.
 - The public GitHub Pages prototype remains separate and never calls this API.
+- `private_app/` is the same-origin iPhone shell served by the private Worker,
+  never by GitHub Pages. It queues household actions on the phone while offline
+  and removes only server-confirmed action IDs after a sync.
 
 ## Provisioning is intentionally blocked
 

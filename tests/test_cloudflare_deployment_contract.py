@@ -18,6 +18,7 @@ def test_deployment_config_has_placeholders_not_real_resource_identifiers():
     assert "REPLACE_AFTER_PRIVATE_PROVISIONING" in text
     assert "account_id" not in text
     assert "ALLOWED_EMAILS" in text
+    assert 'directory = "./private_app"' in text
 
 
 def test_private_schema_and_readme_keep_gps_storage_private():
@@ -40,3 +41,16 @@ def test_import_plan_api_only_accepts_sanitized_staging_fields():
     assert "phone" not in schema.lower()
     assert "email" not in schema.lower()
     assert "import_plan_records" in schema
+
+
+def test_private_phone_shell_is_not_part_of_the_public_pages_artifact():
+    workflow = (ROOT / ".github" / "workflows" / "publish-prototype.yml").read_text()
+    app = (ROOT / "private_app" / "app.js").read_text()
+    service_worker = (ROOT / "private_app" / "service-worker.js").read_text()
+    worker = (ROOT / "cloudflare" / "worker.js").read_text()
+    assert "private_app" not in workflow
+    assert "cp prototype.html public/index.html" in workflow
+    assert 'fetch("/api/v1/actions"' in app
+    assert "localStorage" in app
+    assert 'url.pathname.startsWith("/api/")' in service_worker
+    assert "env.ASSETS.fetch(request)" in worker

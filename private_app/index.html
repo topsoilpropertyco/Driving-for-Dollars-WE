@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#11213b">
+  <title>Five Pointes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <p class="eyebrow">Five Pointes</p>
+      <h1>Capture a home,<br>then keep moving.</h1>
+      <p class="subhead">Private household workspace. Use while parked or as a passenger.</p>
+      <p class="connection" id="connection" role="status">Checking connection…</p>
+    </header>
+
+    <section class="card" aria-labelledby="capture-title">
+      <div class="card-heading"><div><p class="eyebrow">Quick capture</p><h2 id="capture-title">Save an observation</h2></div><span class="pill" id="queueCount">0 queued</span></div>
+      <form id="captureForm">
+        <label for="propertyIdentity">Property identity</label>
+        <input id="propertyIdentity" name="propertyIdentity" autocomplete="off" inputmode="text" placeholder="Parcel ID or saved property ID" required maxlength="256">
+        <p class="help">Use the property ID supplied by the private map. Never enter an owner name, phone number, or email here.</p>
+
+        <label for="stage">Where is it now?</label>
+        <select id="stage" name="stage">
+          <option value="no_outreach">Saved / no outreach</option>
+          <option value="reached_out">Reached out</option>
+          <option value="waiting_for_reply">Haven’t heard back</option>
+          <option value="in_conversation">In conversation</option>
+          <option value="contractor_offer">Contractor offer</option>
+          <option value="realtor_referral">Given to realtor</option>
+          <option value="closed">Closed</option>
+          <option value="archived">Passed / archived</option>
+        </select>
+
+        <label for="note">Quick note <span>optional</span></label>
+        <textarea id="note" name="note" maxlength="1000" placeholder="What stood out about the house or block?"></textarea>
+        <button class="primary" type="submit">Save observation</button>
+      </form>
+    </section>
+
+    <section class="card compact" aria-labelledby="sync-title">
+      <div class="card-heading"><div><p class="eyebrow">Sync</p><h2 id="sync-title">Your phone keeps the queue</h2></div></div>
+      <p id="syncDetail">Nothing waiting to send.</p>
+      <button class="secondary" id="syncNow" type="button">Sync now</button>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

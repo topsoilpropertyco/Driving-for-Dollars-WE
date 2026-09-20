@@ -176,6 +176,7 @@ export default {
       // Avoid returning raw database or payload details to clients or logs.
       return json({ error: "service_unavailable" }, 503);
     }
+    if (!url.pathname.startsWith("/api/") && env.ASSETS) return env.ASSETS.fetch(request);
     return json({ error: "not_found" }, 404);
   },
 };
