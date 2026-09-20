@@ -6,6 +6,7 @@
 - [x] Consolidate product, privacy, recording, and geographic decisions.
 - [x] Define automatic-recording feasibility contract and pilot criteria.
 - [x] Build a synthetic-data mobile/desktop UX prototype.
+- [x] Add a synthetic-only mobile preview deployment workflow.
 - [ ] Review the prototype on phone and desktop.
 - [ ] Approve an external recorder pilot.
 

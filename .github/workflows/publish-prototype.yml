@@ -1,0 +1,47 @@
+name: Publish synthetic prototype
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - prototype.html
+      - tests/test_prototype_contract.py
+      - .github/workflows/publish-prototype.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: prototype-pages
+  cancel-in-progress: true
+
+jobs:
+  verify-and-publish:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify synthetic prototype contract
+        run: |
+          python3 - <<'PY'
+          import runpy
+          module = runpy.run_path('tests/test_prototype_contract.py')
+          for name in sorted(key for key in module if key.startswith('test_')):
+              module[name]()
+          print('Synthetic prototype contract checks passed')
+          PY
+      - name: Build Pages artifact
+        run: |
+          mkdir -p public
+          cp prototype.html public/index.html
+          touch public/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4
