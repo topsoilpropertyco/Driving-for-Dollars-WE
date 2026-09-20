@@ -1,0 +1,6 @@
+APN,County,State,Address,Unit #,City,Owner Name,Phone 1
+12-345-678,Wayne,MI,1257 Berkshire Rd,,Grosse Pointe Farms,Sample Household,555-0101
+98-765-432,Wayne,MI,410 University Pl,,Grosse Pointe,Example Owner,555-0102
+,,MI,35 Merriweather Rd,A,Grosse Pointe Farms,Address Candidate,555-0103
+12-345-678,Wayne,MI,1257 Berkshire Rd,,Grosse Pointe Farms,Duplicate Example,555-0104
+,,,,,,,Incomplete Example,

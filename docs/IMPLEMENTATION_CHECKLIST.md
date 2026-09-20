@@ -14,9 +14,10 @@
 
 - [ ] Create protected household access and API after approval.
 - [ ] Verify parcel data rights and coverage.
-- [ ] Implement resumable CSV/XLSX imports and source provenance.
-- [ ] Add import, privacy, matching, and recovery tests.
-- [ ] Run a dry import with synthetic data.
+- [x] Define CSV identity, provenance, dry-run, and no-overwrite contract.
+- [x] Add synthetic CSV import-plan validation and privacy regression tests.
+- [x] Run a dry import with synthetic data only.
+- [ ] Implement protected, resumable CSV/XLSX import application after approval.
 
 ## Before release
 
