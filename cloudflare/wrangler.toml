@@ -11,12 +11,15 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "five-pointes-private"
-database_id = "REPLACE_AFTER_PRIVATE_PROVISIONING"
+# A syntactically valid all-zero UUID prevents accidental deployment while
+# allowing Wrangler to validate and authenticate this unprovisioned project.
+database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
 binding = "TRACKS"
-bucket_name = "REPLACE_AFTER_PRIVATE_PROVISIONING"
+# This is a deliberately non-existent, syntactically valid placeholder.
+bucket_name = "replace-after-private-provisioning"
 
 # Cloudflare Access protects the Worker route before it reaches this code.
 # Set ALLOWED_EMAILS as a Worker secret; never place household emails here.
