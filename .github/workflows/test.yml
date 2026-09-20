@@ -42,6 +42,7 @@ jobs:
               'tests/test_household_actions.py',
               'tests/test_household_store.py',
               'tests/test_household_api.py',
+              'tests/test_cloudflare_deployment_contract.py',
           )
           for path in paths:
               module = runpy.run_path(path)

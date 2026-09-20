@@ -1,0 +1,18 @@
+name = "five-pointes-private"
+main = "worker.js"
+compatibility_date = "2026-09-20"
+
+# Bindings are intentionally declared without account IDs, database IDs, bucket
+# names, emails, tokens, or secrets. Provisioning fills these in outside Git.
+[[d1_databases]]
+binding = "DB"
+database_name = "five-pointes-private"
+database_id = "REPLACE_AFTER_PRIVATE_PROVISIONING"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "TRACKS"
+bucket_name = "REPLACE_AFTER_PRIVATE_PROVISIONING"
+
+# Cloudflare Access protects the Worker route before it reaches this code.
+# Set ALLOWED_EMAILS as a Worker secret; never place household emails here.
