@@ -22,6 +22,34 @@ function allowedEmail(request, env) {
   return email && allowed.has(email) ? email : null;
 }
 
+async function sha256(value) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function randomToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return btoa(String.fromCharCode(...bytes)).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
+async function bootstrapRecorder(request, env, email) {
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: "invalid_request" }, 400); }
+  if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length !== 0) return json({ error: "invalid_request" }, 400);
+  if (typeof env.RECORDER_INGEST_URL !== "string" || !env.RECORDER_INGEST_URL.startsWith("https://")) return json({ error: "service_unavailable" }, 503);
+  const deviceId = `pilot-${crypto.randomUUID()}`;
+  const token = randomToken();
+  const createdAt = new Date().toISOString();
+  await env.DB.prepare(
+    "INSERT INTO recorder_devices (device_id, token_hash, created_by_email, created_at) VALUES (?, ?, ?, ?)"
+  ).bind(deviceId, await sha256(token), email, createdAt).run();
+  return json({
+    device_id: deviceId,
+    server_url: `${env.RECORDER_INGEST_URL}?token=${encodeURIComponent(token)}`,
+    privacy_notice: "This one-time setup value is shown only in this private session. Do not share it.",
+  }, 201);
+}
+
 function validUtc(value) {
   return typeof value === "string" && value.endsWith("Z") && !Number.isNaN(Date.parse(value));
 }
@@ -161,10 +189,12 @@ async function property(identity, env) {
 export default {
   async fetch(request, env) {
     // Do not serve a fallback public app from this private Worker.
-    if (!allowedEmail(request, env)) return json({ error: "unauthorized" }, 401);
+    const email = allowedEmail(request, env);
+    if (!email) return json({ error: "unauthorized" }, 401);
     const url = new URL(request.url);
     try {
       if (request.method === "GET" && url.pathname === "/api/health") return json({ status: "private-ready" });
+      if (request.method === "POST" && url.pathname === "/api/v1/recorders/bootstrap") return bootstrapRecorder(request, env, email);
       if (request.method === "POST" && url.pathname === "/api/v1/actions") return actions(request, env);
       if (request.method === "POST" && url.pathname === "/api/v1/import-plans") return stageImportPlan(request, env);
       const advance = url.pathname.match(/^\/api\/v1\/import-plans\/([^/]+)\/advance$/);

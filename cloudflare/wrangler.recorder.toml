@@ -1,0 +1,10 @@
+name = "five-pointes-recorder-intake"
+main = "recorder_worker.js"
+compatibility_date = "2026-09-20"
+
+# This source-only file deliberately cannot deploy. The real D1 identifier is
+# kept in an ignored local configuration after the owner has approved a pilot.
+[[d1_databases]]
+binding = "DB"
+database_name = "five-pointes-private"
+database_id = "00000000-0000-0000-0000-000000000000"

@@ -79,3 +79,15 @@ def test_private_phone_shell_has_an_iphone_home_screen_manifest_and_cached_icon(
     assert '<svg' in icon
     assert '"/manifest.webmanifest"' in service_worker
     assert '"/icon.svg"' in service_worker
+
+
+def test_recorder_ingress_is_separate_from_household_access_and_has_no_read_route():
+    ingress = (ROOT / "cloudflare" / "recorder_worker.js").read_text()
+    migration = (ROOT / "cloudflare" / "migrations" / "0003_recorder_pilot.sql").read_text()
+    config = (ROOT / "cloudflare" / "wrangler.recorder.toml").read_text()
+    assert "token_hash" in ingress
+    assert "recorder_devices" in ingress
+    assert 'url.pathname === "/"' in ingress
+    assert "return response(404)" in ingress
+    assert "recorder_points" in migration
+    assert "00000000-0000-0000-0000-000000000000" in config
