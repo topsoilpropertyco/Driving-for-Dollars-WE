@@ -281,6 +281,24 @@ async function property(identity, env) {
   return json({ summary: { property_identity: identity, saved: timeline.some(item => item.kind === "property_saved"), stage, notes, outreach_methods, action_count: timeline.length }, timeline });
 }
 
+async function properties(env) {
+  // This CRM list contains household-created identifiers and action state only.
+  // It does not introduce owner, address, provider, or contact data.
+  const rows = await env.DB.prepare(
+    "SELECT property_identity, occurred_at, kind, payload_json FROM household_actions ORDER BY property_identity, occurred_at, event_id LIMIT 5000"
+  ).bind().all();
+  const summaries = new Map();
+  for (const row of rows.results || []) {
+    const current = summaries.get(row.property_identity) || { property_identity: row.property_identity, saved: false, stage: "no_outreach", action_count: 0, last_activity_at: row.occurred_at };
+    current.saved ||= row.kind === "property_saved";
+    current.action_count += 1;
+    current.last_activity_at = row.occurred_at;
+    if (row.kind === "stage_changed") current.stage = JSON.parse(row.payload_json).stage;
+    summaries.set(row.property_identity, current);
+  }
+  return json({ properties: [...summaries.values()].filter(summary => summary.saved).sort((first, second) => second.last_activity_at.localeCompare(first.last_activity_at)) });
+}
+
 export default {
   async fetch(request, env) {
     // Do not serve a fallback public app from this private Worker.
@@ -302,6 +320,7 @@ export default {
       if (request.method === "POST" && advance && IMPORT_ID.test(advance[1])) return advanceImportPlan(request, env, advance[1]);
       const importStatus = url.pathname.match(/^\/api\/v1\/import-plans\/([^/]+)$/);
       if (request.method === "GET" && importStatus && IMPORT_ID.test(importStatus[1])) return getImportPlan(env, importStatus[1]);
+      if (request.method === "GET" && url.pathname === "/api/v1/properties") return properties(env);
       if (request.method === "GET" && url.pathname.startsWith("/api/v1/properties/")) return property(decodeURIComponent(url.pathname.slice("/api/v1/properties/".length)), env);
     } catch {
       // Avoid returning raw database or payload details to clients or logs.

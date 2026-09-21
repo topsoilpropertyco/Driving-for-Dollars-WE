@@ -71,9 +71,42 @@ async function sync() {
     const confirmed = new Set([...(result.accepted_event_ids || []), ...(result.already_seen_event_ids || [])]);
     writeQueue(queue.filter(item => !confirmed.has(item.event_id)));
     refreshStatus();
+    if (confirmed.size) refreshProperties();
     toast(confirmed.size ? "Saved to your shared workspace." : "Nothing new was accepted yet.");
   } catch { refreshStatus("Secure sync is unavailable. Your captures remain queued on this phone."); }
   finally { $("syncNow").disabled = false; }
+}
+
+const stageNames = {
+  no_outreach: "Saved / no outreach", reached_out: "Reached out", waiting_for_reply: "Haven’t heard back", in_conversation: "In conversation",
+  contractor_offer: "Contractor offer", realtor_referral: "Given to realtor", closed: "Closed", archived: "Passed / archived",
+};
+async function refreshProperties() {
+  const button = $("refreshProperties");
+  button.disabled = true;
+  try {
+    const response = await fetch("/api/v1/properties", { cache: "no-store" });
+    if (!response.ok) throw new Error("properties unavailable");
+    const { properties } = await response.json();
+    $("propertyCount").textContent = `${properties.length} saved`;
+    const list = $("propertyList");
+    list.replaceChildren(...properties.slice(0, 12).map(property => {
+      const item = document.createElement("button");
+      item.className = "property-row";
+      item.type = "button";
+      const identity = document.createElement("strong");
+      identity.textContent = property.property_identity;
+      const detail = document.createElement("span");
+      detail.textContent = `${stageNames[property.stage] || "Saved"} · ${property.action_count} action${property.action_count === 1 ? "" : "s"}`;
+      item.append(identity, detail);
+      return item;
+    }));
+    if (!properties.length) $("propertiesDetail").textContent = "No saved homes yet. Add one with Quick capture while parked.";
+    else $("propertiesDetail").textContent = "Your latest saved homes are shown below. These are household captures only.";
+  } catch {
+    $("propertyCount").textContent = "Unavailable";
+    $("propertiesDetail").textContent = "Saved homes are unavailable right now. Your local capture queue is unchanged.";
+  } finally { button.disabled = false; }
 }
 
 $("captureForm").addEventListener("submit", async event => {
@@ -100,6 +133,7 @@ $("captureForm").addEventListener("submit", async event => {
   }
 });
 $("syncNow").addEventListener("click", sync);
+$("refreshProperties").addEventListener("click", refreshProperties);
 $("prepareRecorder").addEventListener("click", async () => {
   const button = $("prepareRecorder");
   if (button.disabled) return;
@@ -278,5 +312,6 @@ window.addEventListener("offline", () => refreshStatus());
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refreshTrackerSignal(); });
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-worker.js").catch(() => {});
 refreshStatus();
+refreshProperties();
 refreshTrackerSignal();
 setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000);

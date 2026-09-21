@@ -19,8 +19,10 @@ class FakeActionD1 {
   }
 
   async all(sql, args) {
-    if (!sql.includes("FROM household_actions WHERE property_identity")) throw new Error("Unhandled read");
-    return { results: [...this.actions.values()].filter(action => action.property_identity === args[0]).sort((a, b) => a.occurred_at.localeCompare(b.occurred_at) || a.event_id.localeCompare(b.event_id)) };
+    const all = [...this.actions.values()].sort((a, b) => a.property_identity.localeCompare(b.property_identity) || a.occurred_at.localeCompare(b.occurred_at) || a.event_id.localeCompare(b.event_id));
+    if (sql.includes("FROM household_actions WHERE property_identity")) return { results: all.filter(action => action.property_identity === args[0]) };
+    if (sql.includes("SELECT property_identity, occurred_at, kind, payload_json FROM household_actions")) return { results: all };
+    throw new Error("Unhandled read");
   }
 }
 
@@ -60,5 +62,9 @@ assert.equal(body.summary.saved, true);
 assert.equal(body.summary.stage, "in_conversation");
 assert.deepEqual(body.summary.notes, ["synthetic field note"]);
 assert.equal(body.summary.action_count, 3);
+
+const savedHomes = await worker.fetch(new Request("https://private.example.test/api/v1/properties", { headers: { "Cf-Access-Authenticated-User-Email": "claire@example.test" } }), env);
+assert.equal(savedHomes.status, 200);
+assert.deepEqual(await savedHomes.json(), { properties: [{ property_identity: propertyIdentity, saved: true, stage: "in_conversation", action_count: 3, last_activity_at: "2026-09-20T12:02:00Z" }] });
 
 console.log("worker actions contract: passed");

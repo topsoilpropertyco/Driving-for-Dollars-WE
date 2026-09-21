@@ -130,3 +130,13 @@ def test_private_phone_shell_has_a_recent_signal_indicator_not_a_claimed_switch_
     assert "TRACKER_FRESH_MS" in app
     assert 'fetch("/api/v1/recorders/status"' in app
     assert 'setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000)' in app
+
+
+def test_private_crm_list_is_authenticated_and_does_not_require_provider_data():
+    worker = (ROOT / "cloudflare" / "worker.js").read_text()
+    app = (ROOT / "private_app" / "app.js").read_text()
+    page = (ROOT / "private_app" / "index.html").read_text()
+    assert 'url.pathname === "/api/v1/properties"' in worker
+    assert 'fetch("/api/v1/properties"' in app
+    assert 'id="propertyList"' in page
+    assert "No external property or owner data has been imported." in page

@@ -269,3 +269,7 @@ textarea:focus-visible {
   background: #f4f7fb;
 }
 .route-selector { margin-top: 10px; }
+.property-list { display: grid; gap: 8px; margin: 14px 0; }
+.property-row { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: #f8fafc; color: var(--ink); text-align: left; font: inherit; }
+.property-row strong,.property-row span { display: block; }
+.property-row span { margin-top: 2px; color: var(--muted); font-size: 12px; }
