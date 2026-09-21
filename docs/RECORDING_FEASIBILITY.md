@@ -44,6 +44,15 @@ The pilot is **not** a production data launch: no property import, public
 dashboard update, or street-coverage replacement is performed by the recorder
 endpoint. The first points remain private in D1 for pilot validation only.
 
+### Verified first field test
+
+On 2026-09-21, one household iPhone completed the bounded field test: private
+setup, an active short drive with the phone locked, and a Stop verification.
+The service received the expected batch of post-test points and then received
+no further points after tracking was switched off. Validation used aggregate
+counts and timestamps only; no route or coordinate was reviewed. An offline
+retry test is still required before the pilot can be called complete.
+
 ## Alternatives considered
 
 - OwnTracks with a secure HTTPS endpoint: kept as the fallback if Traccar does

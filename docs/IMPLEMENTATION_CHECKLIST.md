@@ -36,7 +36,7 @@
 - [x] Measure coverage against a deduplicated road network and atomically replace all pipeline artifacts.
 - [x] Share canonical road intervals between coverage and undriven output.
 - [x] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
-- [ ] Complete the recorder pilot (Traccar one-phone setup, locked-screen drive, retry, and Stop verification).
+- [ ] Complete the recorder pilot (one-phone setup, short locked-screen drive, and Stop verification passed on 2026-09-21; offline retry remains).
 - [x] Provision and deploy the approved authenticated private API and phone-side offline queue.
 - [ ] Complete two-device field usability testing.
 - [x] Approve external hosting and deployment.
