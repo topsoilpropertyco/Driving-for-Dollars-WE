@@ -97,6 +97,7 @@ async function showProperty(identity) {
     const property = await response.json();
     $("selectedProperty").textContent = property.summary.property_identity;
     $("selectedPropertySummary").textContent = `${stageNames[property.summary.stage] || "Saved"} · ${property.summary.action_count} saved action${property.summary.action_count === 1 ? "" : "s"}`;
+    $("selectedPropertyStage").value = property.summary.stage || "no_outreach";
     $("selectedPropertyTimeline").replaceChildren(...property.timeline.map(item => {
       const entry = document.createElement("li");
       entry.textContent = `${new Date(item.occurred_at).toLocaleString()} — ${timelineLabel(item)}`;
@@ -106,6 +107,16 @@ async function showProperty(identity) {
   } catch {
     $("propertiesDetail").textContent = "That saved home could not be loaded right now. Your local capture queue is unchanged.";
   }
+}
+
+async function saveSelectedPropertyAction(kind, payload, message) {
+  const identity = $("selectedProperty").textContent.trim();
+  if (!identity) return toast("Choose a saved home first.");
+  enqueue(action(kind, identity, payload));
+  refreshStatus();
+  await sync();
+  await showProperty(identity);
+  toast(message);
 }
 async function refreshProperties() {
   const button = $("refreshProperties");
@@ -161,6 +172,21 @@ $("captureForm").addEventListener("submit", async event => {
 });
 $("syncNow").addEventListener("click", sync);
 $("refreshProperties").addEventListener("click", refreshProperties);
+$("propertyStageForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  await saveSelectedPropertyAction("stage_changed", { stage: $("selectedPropertyStage").value }, "Stage saved to your shared workspace.");
+});
+$("propertyNoteForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const note = $("selectedPropertyNote").value.trim();
+  if (!note) return toast("Write a note before saving it.");
+  $("selectedPropertyNote").value = "";
+  await saveSelectedPropertyAction("note_added", { note }, "Private note saved to your shared workspace.");
+});
+$("propertyOutreachForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  await saveSelectedPropertyAction("outreach_logged", { method: $("selectedPropertyOutreach").value }, "Outreach saved to your shared workspace.");
+});
 $("prepareRecorder").addEventListener("click", async () => {
   const button = $("prepareRecorder");
   if (button.disabled) return;

@@ -280,3 +280,5 @@ textarea:focus-visible {
 .property-detail h3 { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
 .property-detail p:not(.eyebrow) { margin: 5px 0; color: var(--muted); font-size: 13px; }
 .property-detail ul { display: grid; gap: 5px; margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+.property-action { margin-top: 14px; }
+.property-action .secondary { margin-top: 10px; }

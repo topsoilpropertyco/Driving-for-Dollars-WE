@@ -59,6 +59,23 @@
         <p class="eyebrow">Selected home</p><h3 id="selectedProperty"></h3>
         <p id="selectedPropertySummary"></p>
         <ul id="selectedPropertyTimeline"></ul>
+        <form class="property-action" id="propertyStageForm">
+          <label for="selectedPropertyStage">Update stage</label>
+          <select id="selectedPropertyStage">
+            <option value="no_outreach">Saved / no outreach</option><option value="reached_out">Reached out</option><option value="waiting_for_reply">Haven’t heard back</option><option value="in_conversation">In conversation</option><option value="contractor_offer">Contractor offer</option><option value="realtor_referral">Given to realtor</option><option value="closed">Closed</option><option value="archived">Passed / archived</option>
+          </select>
+          <button class="secondary" type="submit">Save stage</button>
+        </form>
+        <form class="property-action" id="propertyNoteForm">
+          <label for="selectedPropertyNote">Add a private note</label>
+          <textarea id="selectedPropertyNote" maxlength="2000" placeholder="What changed?" aria-label="Private note for selected home"></textarea>
+          <button class="secondary" type="submit">Save note</button>
+        </form>
+        <form class="property-action" id="propertyOutreachForm">
+          <label for="selectedPropertyOutreach">Log outreach</label>
+          <select id="selectedPropertyOutreach"><option value="mail">Mail</option><option value="phone">Phone</option><option value="text">Text</option><option value="email">Email</option><option value="door_knock">Door knock</option><option value="other">Other</option></select>
+          <button class="secondary" type="submit">Log outreach</button>
+        </form>
       </div>
       <button class="secondary" id="refreshProperties" type="button">Refresh saved homes</button>
     </section>

@@ -146,6 +146,10 @@ def test_private_crm_list_is_authenticated_and_does_not_require_provider_data():
     page = (ROOT / "private_app" / "index.html").read_text()
     assert 'url.pathname === "/api/v1/properties"' in worker
     assert 'fetch("/api/v1/properties"' in app
+    assert 'id="propertyStageForm"' in page
+    assert 'id="propertyNoteForm"' in page
+    assert 'id="propertyOutreachForm"' in page
+    assert 'saveSelectedPropertyAction' in app
     assert 'id="propertyList"' in page
     assert 'id="propertyDetail" hidden' in page
     assert 'fetch(`/api/v1/properties/${encodeURIComponent(identity)}`' in app
