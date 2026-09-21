@@ -39,9 +39,11 @@ recording metadata, owner/contact information, provider rows, notes, stages,
 and source history. Private data is never committed, cached in CI, placed in a
 public build, or logged.
 
-The production app will use a shared household access mechanism with revocable
-device sessions; it does not require separate daily logins. It must not be
-implemented or deployed until the owner approves external service setup.
+The private household shell now uses Cloudflare Access with revocable
+one-time-email sessions; it does not require separate daily logins. The public
+GitHub Pages prototype remains a synthetic-only, separate deployment. Private
+GPS ingestion and real property imports remain disabled until their individual
+approval gates have been passed.
 
 Existing Do Not Call columns are source data only. This project provides no
 filtering, warnings, restrictions, or automation based on them.
@@ -89,5 +91,6 @@ Before real data or deployment:
 4. Canonical roads, parcel matching, and evidence-based coverage.
 5. Shared CRM, offline queue, automation, and deployment.
 
-No external services, deployment, production imports, or private GPS access are
-authorized in the current phase.
+Cloudflare hosting, private household access, D1, and an empty private R2
+bucket are provisioned. No external recording service is connected, no real
+property import is authorized, and no private GPS recording has been accepted.
