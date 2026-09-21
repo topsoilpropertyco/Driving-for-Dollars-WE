@@ -53,6 +53,15 @@ no further points after tracking was switched off. Validation used aggregate
 counts and timestamps only; no route or coordinate was reviewed. An offline
 retry test is still required before the pilot can be called complete.
 
+### Planned daycare drive validation
+
+The next normal-use validation is a morning daycare drive that begins outside
+the bundled Grosse Pointe road geometry and proceeds toward it. The recorder
+and private route playback must cover the entire drive; only the green
+street-coverage preview is geographically limited to the bundled Grosse
+Pointe roads. The driver will turn Continuous tracking on before departure and
+off after parking, then verify the household app's recent-report signal.
+
 ## Alternatives considered
 
 - OwnTracks with a secure HTTPS endpoint: kept as the fallback if Traccar does

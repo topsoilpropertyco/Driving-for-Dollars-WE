@@ -138,6 +138,8 @@ def test_private_phone_shell_has_a_recent_signal_indicator_not_a_claimed_switch_
     assert "TRACKER_FRESH_MS" in app
     assert 'fetch("/api/v1/recorders/status"' in app
     assert 'setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000)' in app
+    assert "Daycare drive tomorrow morning" in page
+    assert "begins outside the bundled Grosse Pointe street area" in page
 
 
 def test_private_crm_list_is_authenticated_and_does_not_require_provider_data():

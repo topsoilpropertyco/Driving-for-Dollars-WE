@@ -132,6 +132,8 @@ h2 {
   gap: 10px;
   margin-bottom: 18px;
 }
+.field-test ol { margin: 0; padding-left: 21px; color: var(--ink); }
+.field-test li + li { margin-top: 8px; }
 .pill {
   border-radius: 999px;
   padding: 5px 9px;
