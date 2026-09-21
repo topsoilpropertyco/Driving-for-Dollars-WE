@@ -66,3 +66,16 @@ def test_private_capture_shell_prevents_double_taps_and_resets_after_a_local_cap
     assert 'submit.textContent = "Saving…"' in app
     assert '$("captureForm").reset()' in app
     assert 'toast("Captured safely. Ready for the next home.")' in app
+
+
+def test_private_phone_shell_has_an_iphone_home_screen_manifest_and_cached_icon():
+    page = (ROOT / "private_app" / "index.html").read_text()
+    manifest = (ROOT / "private_app" / "manifest.webmanifest").read_text()
+    icon = (ROOT / "private_app" / "icon.svg").read_text()
+    service_worker = (ROOT / "private_app" / "service-worker.js").read_text()
+    assert 'rel="manifest" href="/manifest.webmanifest"' in page
+    assert 'apple-mobile-web-app-capable' in page
+    assert '"display": "standalone"' in manifest
+    assert '<svg' in icon
+    assert '"/manifest.webmanifest"' in service_worker
+    assert '"/icon.svg"' in service_worker
