@@ -90,22 +90,11 @@
       <button class="secondary" id="refreshProperties" type="button">Refresh saved homes</button>
     </section>
 
-    <section class="card compact" aria-labelledby="import-title">
-      <div class="card-heading"><div><p class="eyebrow">Property data</p><h2 id="import-title">Local import preflight</h2></div><span class="pill">No upload</span></div>
-      <p class="help">Use this only after property-data rights are approved. The selected CSV stays on this device while the app checks identity structure; nothing is uploaded, stored, or imported.</p>
-      <form id="importPreflightForm">
-        <label for="importSource">Approved source label</label>
-        <input id="importSource" maxlength="128" autocomplete="off" placeholder="Example: county parcel export">
-        <label for="importFile">CSV file</label>
-        <input id="importFile" type="file" accept=".csv,text/csv" aria-describedby="importDetail">
-        <button class="secondary" type="submit">Check locally</button>
-      </form>
-      <p class="help" id="importDetail" aria-live="polite">No file has been read.</p>
-      <div class="import-stage" id="importStage" hidden>
-        <label class="consent"><input id="importRightsConfirmed" type="checkbox"> I confirm this source is authorized for this household's private review.</label>
-        <button class="secondary" id="stageImportPlan" type="button">Stage sanitized plan for review</button>
-        <p class="help" id="importStageDetail" aria-live="polite">Only normalized property identities and field names will be saved for review; raw file values stay on this device.</p>
-      </div>
+    <section class="card compact" aria-labelledby="handoff-title">
+      <div class="card-heading"><div><p class="eyebrow">Data handoff</p><h2 id="handoff-title">Export saved homes</h2></div><span class="pill">CSV</span></div>
+      <p class="help">Download only the homes you saved here, then import that file into any outside service you choose. Five Pointes does not connect to, select, or receive data from a vendor.</p>
+      <button class="secondary" id="exportProperties" type="button">Download saved homes CSV</button>
+      <p class="help" id="exportDetail" aria-live="polite">The export contains your saved property IDs, household stage, action count, and last activity time—no recorder credentials or route coordinates.</p>
     </section>
 
     <section class="card compact" aria-labelledby="sync-title">

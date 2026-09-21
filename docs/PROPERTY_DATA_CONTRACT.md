@@ -11,11 +11,10 @@ fixture during this phase.
 The future protected service, not this public repository or Pages site, will
 store private property and owner data.
 
-The protected household phone app also has a local CSV preflight screen. It
-reads a user-selected file only in that browser session and reports aggregate
-identity/validation counts. It sends no file values, plan, or request to the
-server. It is a preparation aid after rights are approved—not an import or a
-substitute for selecting an authorized source.
+The protected household phone app exports saved household property IDs and
+workflow state as a vendor-neutral CSV. The household may import that file
+into any outside service it chooses; Five Pointes does not select, connect to,
+or receive data from a vendor.
 
 ## Identity and merge rules
 

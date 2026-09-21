@@ -1,10 +1,8 @@
 import { previewCoverage } from "./coverage_preview.mjs";
-import { planCsvText } from "./import_preflight.mjs";
 
 const QUEUE_KEY = "five-pointes.private-action-queue.v1";
 const DEVICE_KEY = "five-pointes.private-device.v1";
 const SEQUENCE_KEY = "five-pointes.private-action-sequence.v1";
-const IMPORT_RUN_KEY = "five-pointes.private-import-run.v1";
 const stages = new Set(["no_outreach", "reached_out", "waiting_for_reply", "in_conversation", "contractor_offer", "realtor_referral", "closed", "archived"]);
 const $ = id => document.getElementById(id);
 
@@ -174,78 +172,30 @@ $("captureForm").addEventListener("submit", async event => {
 });
 $("syncNow").addEventListener("click", sync);
 $("refreshProperties").addEventListener("click", refreshProperties);
-let plannedImport = null;
-function renderImportProgress(progress) {
-  $("importStageDetail").textContent = `${progress.processed_records} of ${progress.total_records} sanitized records reviewed; ${progress.review_records} require manual review. Status: ${progress.status.replaceAll("_", " ")}.`;
-}
-async function advanceImportRun(importId, progress) {
-  let current = progress;
-  while (current.status === "staged" && current.processed_records < current.total_records) {
-    const response = await fetch(`/api/v1/import-plans/${encodeURIComponent(importId)}/advance`, {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ batch_size: 500 }),
-    });
-    if (!response.ok) throw new Error("import review unavailable");
-    current = await response.json();
-    renderImportProgress(current);
-  }
-  return current;
-}
-$("importPreflightForm").addEventListener("submit", async event => {
-  event.preventDefault();
-  const file = $("importFile").files?.[0];
-  if (!file) return toast("Choose a CSV file first.");
-  const button = event.currentTarget.querySelector("button");
+function csvCell(value) { return `"${String(value ?? "").replaceAll('"', '""')}"`; }
+$("exportProperties").addEventListener("click", async () => {
+  const button = $("exportProperties");
   button.disabled = true;
-  button.textContent = "Checking locally…";
+  button.textContent = "Preparing…";
   try {
-    const plan = await planCsvText(await file.text(), $("importSource").value);
-    if (plan.records.length > 5_000) throw new Error("This preflight has more than 5,000 records. Split the approved file before staging it.");
-    plannedImport = plan;
-    $("importStage").hidden = false;
-    $("importDetail").textContent = `${plan.accepted} accepted, ${plan.review_required} requiring review, and ${plan.rejected} rejected. This local preflight did not upload or import the file.`;
-  } catch (error) {
-    $("importDetail").textContent = error instanceof Error ? error.message : "The CSV could not be checked locally.";
+    const response = await fetch("/api/v1/properties", { cache: "no-store" });
+    if (!response.ok) throw new Error("saved homes unavailable");
+    const { properties } = await response.json();
+    const rows = [["property_identity", "stage", "action_count", "last_activity_at"], ...properties.map(property => [property.property_identity, property.stage, property.action_count, property.last_activity_at])];
+    const file = new Blob([rows.map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(file);
+    link.download = `five-pointes-saved-homes-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
+    $("exportDetail").textContent = `${properties.length} saved home${properties.length === 1 ? "" : "s"} downloaded as a vendor-neutral CSV.`;
+  } catch {
+    $("exportDetail").textContent = "The saved-home export is unavailable right now. Your homes remain private in this app.";
   } finally {
     button.disabled = false;
-    button.textContent = "Check locally";
+    button.textContent = "Download saved homes CSV";
   }
 });
-$("stageImportPlan").addEventListener("click", async () => {
-  if (!plannedImport) return toast("Check a CSV locally before staging it.");
-  if (!$("importRightsConfirmed").checked) return toast("Confirm that this source is authorized before staging it.");
-  const button = $("stageImportPlan");
-  button.disabled = true;
-  button.textContent = "Staging…";
-  try {
-    const response = await fetch("/api/v1/import-plans", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ source_name: plannedImport.source_name, source_fingerprint: plannedImport.source_fingerprint, rejected_count: plannedImport.rejected, records: plannedImport.records }),
-    });
-    if (!response.ok) throw new Error("staging unavailable");
-    const staged = await response.json();
-    localStorage.setItem(IMPORT_RUN_KEY, staged.import_id);
-    renderImportProgress(await advanceImportRun(staged.import_id, staged));
-    toast("Sanitized import plan is ready for household review.");
-  } catch {
-    $("importStageDetail").textContent = "The plan could not be staged. The local file and its raw values remain only on this device.";
-  } finally {
-    button.disabled = false;
-    button.textContent = "Stage sanitized plan for review";
-  }
-});
-async function refreshImportRun() {
-  const importId = localStorage.getItem(IMPORT_RUN_KEY);
-  if (!importId) return;
-  try {
-    const response = await fetch(`/api/v1/import-plans/${encodeURIComponent(importId)}`, { cache: "no-store" });
-    if (!response.ok) throw new Error("import run unavailable");
-    $("importStage").hidden = false;
-    renderImportProgress(await response.json());
-  } catch {
-    // A stale local run ID is harmless; no file data is stored in the browser.
-    localStorage.removeItem(IMPORT_RUN_KEY);
-  }
-}
 $("propertyStageForm").addEventListener("submit", async event => {
   event.preventDefault();
   await saveSelectedPropertyAction("stage_changed", { stage: $("selectedPropertyStage").value }, "Stage saved to your shared workspace.");
@@ -485,6 +435,5 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-worker.js").catch(() => {});
 refreshStatus();
 refreshProperties();
-refreshImportRun();
 refreshTrackerSignal();
 setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000);
