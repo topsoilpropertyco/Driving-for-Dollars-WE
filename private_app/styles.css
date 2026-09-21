@@ -273,3 +273,7 @@ textarea:focus-visible {
 .property-row { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: #f8fafc; color: var(--ink); text-align: left; font: inherit; }
 .property-row strong,.property-row span { display: block; }
 .property-row span { margin-top: 2px; color: var(--muted); font-size: 12px; }
+.property-detail { margin: 14px 0; border-left: 3px solid var(--blue); padding: 4px 0 4px 12px; }
+.property-detail h3 { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
+.property-detail p:not(.eyebrow) { margin: 5px 0; color: var(--muted); font-size: 13px; }
+.property-detail ul { display: grid; gap: 5px; margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }

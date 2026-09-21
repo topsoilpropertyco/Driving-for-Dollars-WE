@@ -81,6 +81,30 @@ const stageNames = {
   no_outreach: "Saved / no outreach", reached_out: "Reached out", waiting_for_reply: "Haven’t heard back", in_conversation: "In conversation",
   contractor_offer: "Contractor offer", realtor_referral: "Given to realtor", closed: "Closed", archived: "Passed / archived",
 };
+function timelineLabel(item) {
+  if (item.kind === "property_saved") return "Saved";
+  if (item.kind === "stage_changed") return `Stage: ${stageNames[item.payload.stage] || "Updated"}`;
+  if (item.kind === "note_added") return `Note: ${item.payload.note}`;
+  if (item.kind === "outreach_logged") return `Outreach: ${item.payload.method}`;
+  return "Updated";
+}
+async function showProperty(identity) {
+  try {
+    const response = await fetch(`/api/v1/properties/${encodeURIComponent(identity)}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("property unavailable");
+    const property = await response.json();
+    $("selectedProperty").textContent = property.summary.property_identity;
+    $("selectedPropertySummary").textContent = `${stageNames[property.summary.stage] || "Saved"} · ${property.summary.action_count} saved action${property.summary.action_count === 1 ? "" : "s"}`;
+    $("selectedPropertyTimeline").replaceChildren(...property.timeline.map(item => {
+      const entry = document.createElement("li");
+      entry.textContent = `${new Date(item.occurred_at).toLocaleString()} — ${timelineLabel(item)}`;
+      return entry;
+    }));
+    $("propertyDetail").hidden = false;
+  } catch {
+    $("propertiesDetail").textContent = "That saved home could not be loaded right now. Your local capture queue is unchanged.";
+  }
+}
 async function refreshProperties() {
   const button = $("refreshProperties");
   button.disabled = true;
@@ -99,6 +123,7 @@ async function refreshProperties() {
       const detail = document.createElement("span");
       detail.textContent = `${stageNames[property.stage] || "Saved"} · ${property.action_count} action${property.action_count === 1 ? "" : "s"}`;
       item.append(identity, detail);
+      item.addEventListener("click", () => showProperty(property.property_identity));
       return item;
     }));
     if (!properties.length) $("propertiesDetail").textContent = "No saved homes yet. Add one with Quick capture while parked.";
