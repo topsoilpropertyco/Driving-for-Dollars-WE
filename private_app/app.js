@@ -1,4 +1,5 @@
 import { previewCoverage } from "./coverage_preview.mjs";
+import { planCsvText } from "./import_preflight.mjs";
 
 const QUEUE_KEY = "five-pointes.private-action-queue.v1";
 const DEVICE_KEY = "five-pointes.private-device.v1";
@@ -172,6 +173,23 @@ $("captureForm").addEventListener("submit", async event => {
 });
 $("syncNow").addEventListener("click", sync);
 $("refreshProperties").addEventListener("click", refreshProperties);
+$("importPreflightForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const file = $("importFile").files?.[0];
+  if (!file) return toast("Choose a CSV file first.");
+  const button = event.currentTarget.querySelector("button");
+  button.disabled = true;
+  button.textContent = "Checking locally…";
+  try {
+    const plan = await planCsvText(await file.text(), $("importSource").value);
+    $("importDetail").textContent = `${plan.accepted} accepted, ${plan.review_required} requiring review, and ${plan.rejected} rejected. This local preflight did not upload or import the file.`;
+  } catch (error) {
+    $("importDetail").textContent = error instanceof Error ? error.message : "The CSV could not be checked locally.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Check locally";
+  }
+});
 $("propertyStageForm").addEventListener("submit", async event => {
   event.preventDefault();
   await saveSelectedPropertyAction("stage_changed", { stage: $("selectedPropertyStage").value }, "Stage saved to your shared workspace.");

@@ -152,6 +152,9 @@ def test_private_crm_list_is_authenticated_and_does_not_require_provider_data():
     assert 'id="propertyNoteForm"' in page
     assert 'id="propertyOutreachForm"' in page
     assert 'saveSelectedPropertyAction' in app
+    assert 'id="importPreflightForm"' in page
+    assert 'planCsvText' in app
+    assert (ROOT / "private_app" / "import_preflight.mjs").is_file()
     assert 'id="propertyList"' in page
     assert 'id="propertyDetail" hidden' in page
     assert 'fetch(`/api/v1/properties/${encodeURIComponent(identity)}`' in app

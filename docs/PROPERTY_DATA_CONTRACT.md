@@ -11,6 +11,12 @@ fixture during this phase.
 The future protected service, not this public repository or Pages site, will
 store private property and owner data.
 
+The protected household phone app also has a local CSV preflight screen. It
+reads a user-selected file only in that browser session and reports aggregate
+identity/validation counts. It sends no file values, plan, or request to the
+server. It is a preparation aid after rights are approved—not an import or a
+substitute for selecting an authorized source.
+
 ## Identity and merge rules
 
 1. The primary identity is `state + county + APN`, normalized without spaces or
