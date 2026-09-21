@@ -96,6 +96,24 @@ $("prepareRecorder").addEventListener("click", async () => {
     button.textContent = "Prepare recorder";
   }
 });
+$("checkRecorder").addEventListener("click", async () => {
+  const button = $("checkRecorder");
+  button.disabled = true;
+  button.textContent = "Checking…";
+  try {
+    const response = await fetch("/api/v1/recorders/status", { cache: "no-store" });
+    if (!response.ok) throw new Error("recorder status failed");
+    const status = await response.json();
+    if (!status.active_devices) $("recorderHealth").textContent = "No active recorder is configured on this account.";
+    else if (!status.points_received) $("recorderHealth").textContent = "Recorder is ready. No location points have arrived yet.";
+    else $("recorderHealth").textContent = `${status.points_received} location point${status.points_received === 1 ? "" : "s"} received privately.`;
+  } catch {
+    $("recorderHealth").textContent = "Recorder status is unavailable. Your settings were not changed.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Check recorder";
+  }
+});
 document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
   const input = $(button.dataset.copy);
   try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }

@@ -65,6 +65,8 @@
         <label for="recorderServer">Server URL</label>
         <div class="copy-row"><input id="recorderServer" type="password" readonly autocomplete="off" spellcheck="false" aria-label="Recorder server URL"><button class="copy" data-copy="recorderServer" type="button">Copy</button></div>
         <p class="help">Use iPhone Location permission: <strong>Always</strong>, with Precise Location enabled. We will test Start and Stop before any real drive.</p>
+        <button class="secondary" id="checkRecorder" type="button">Check recorder</button>
+        <p class="help" id="recorderHealth" aria-live="polite">No recorder check has run yet.</p>
       </div>
     </section>
   </main>

@@ -102,5 +102,7 @@ def test_private_phone_shell_only_generates_recorder_setup_after_authenticated_b
     assert 'id="recorderServer" type="password"' in page
     assert "do not share or screenshot" in page
     assert 'fetch("/api/v1/recorders/bootstrap"' in app
+    assert 'fetch("/api/v1/recorders/status"' in app
+    assert 'id="checkRecorder"' in page
     assert "navigator.clipboard.writeText" in app
     assert 'localStorage.setItem("recorder' not in app
