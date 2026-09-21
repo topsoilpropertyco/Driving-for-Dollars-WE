@@ -80,7 +80,7 @@ or response bodies.
 - [ ] Switching between navigation and the home-search app does not stop it.
 - [ ] A temporary connectivity loss queues and later delivers points once.
 - [ ] Stop prevents subsequent location delivery.
-- [ ] A completed session appears as one session, with no duplicate points.
+- [x] A completed session appears as one session, with no duplicate points (verified on 2026-09-21; the short drive was grouped separately from the earlier stationary test).
 - [ ] Coverage has enough points to distinguish nearby parallel streets.
 - [ ] Battery consumption is acceptable for a two-hour drive.
 - [ ] No location endpoint, credentials, or recordings are exposed publicly.
