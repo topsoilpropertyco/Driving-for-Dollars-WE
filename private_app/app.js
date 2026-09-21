@@ -238,7 +238,7 @@ function projectRoute(points, width, height) {
   return point => [((point[0] - west) / spanX) * width, height - ((point[1] - south) / spanY) * height];
 }
 
-function drawRoute(route, roadLines, coverage) {
+function drawRoutePaths(routes, roadLines, coverage) {
   const canvas = $("routeMap");
   const width = canvas.clientWidth || 600;
   const height = width * 0.6;
@@ -249,7 +249,8 @@ function drawRoute(route, roadLines, coverage) {
   context.scale(pixelRatio, pixelRatio);
   context.fillStyle = "#f4f7fb";
   context.fillRect(0, 0, width, height);
-  const project = projectRoute(route, width, height);
+  const points = routes.flat();
+  const project = projectRoute(points, width, height);
   context.strokeStyle = "#ccd5e3";
   context.lineWidth = 1;
   for (const road of roadLines) {
@@ -272,21 +273,23 @@ function drawRoute(route, roadLines, coverage) {
     }
   }
   context.strokeStyle = "#2d6df6";
-  context.lineWidth = 4;
+  context.lineWidth = routes.length === 1 ? 4 : 2.5;
   context.lineJoin = "round";
   context.lineCap = "round";
-  context.beginPath();
-  route.forEach((point, index) => {
-    const [x, y] = project(point);
-    if (index) context.lineTo(x, y); else context.moveTo(x, y);
-  });
-  context.stroke();
-  for (const [point, color] of [[route[0], "#167a59"], [route.at(-1), "#d13f38"]]) {
-    const [x, y] = project(point);
-    context.fillStyle = color;
+  for (const route of routes) {
     context.beginPath();
-    context.arc(x, y, 5, 0, Math.PI * 2);
-    context.fill();
+    route.forEach((point, index) => {
+      const [x, y] = project(point);
+      if (index) context.lineTo(x, y); else context.moveTo(x, y);
+    });
+    context.stroke();
+    for (const [point, color] of [[route[0], "#167a59"], [route.at(-1), "#d13f38"]]) {
+      const [x, y] = project(point);
+      context.fillStyle = color;
+      context.beginPath();
+      context.arc(x, y, 5, 0, Math.PI * 2);
+      context.fill();
+    }
   }
 }
 
@@ -330,7 +333,7 @@ async function loadSelectedRoute() {
     }
     const streetLines = await roads();
     const coverage = previewCoverage(route.coordinates, streetLines);
-    drawRoute(route.coordinates, streetLines, coverage);
+    drawRoutePaths([route.coordinates], streetLines, coverage);
     $("routeCount").textContent = `${route.point_count} points`;
     $("routeDetail").textContent = `Selected drive: ${readableDistance(route.sampled_distance_meters)} sampled over ${readableDuration(route.duration_seconds)} with ${route.point_count} points. Largest reporting gap: ${readableDistance(route.largest_gap_meters)}. Blue is the private route; green is the start and red is the finish.`;
     $("coverageDetail").textContent = `Green street segments are within 30 m of this selected drive: about ${readableDistance(coverage.coveredMeters)} of ${readableDistance(coverage.totalMeters)} in the bundled road network. This is a private per-drive preview.`;
@@ -343,6 +346,34 @@ async function loadSelectedRoute() {
 }
 $("loadRoute").addEventListener("click", loadSelectedRoute);
 $("routeSession").addEventListener("change", loadSelectedRoute);
+$("loadHouseholdCoverage").addEventListener("click", async () => {
+  const button = $("loadHouseholdCoverage");
+  button.disabled = true;
+  button.textContent = "Loading…";
+  try {
+    await loadRouteSessions();
+    const sessionIds = [...$("routeSession").options].map(option => option.value).filter(Boolean);
+    const routes = await Promise.all(sessionIds.map(async session => {
+      const response = await fetch(`/api/v1/recorders/latest-route?session=${encodeURIComponent(session)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("route unavailable");
+      return response.json();
+    }));
+    const completedRoutes = routes.filter(route => route.coordinates.length >= 2);
+    if (!completedRoutes.length) throw new Error("no completed routes");
+    const streetLines = await roads();
+    const coverage = previewCoverage(completedRoutes.map(route => route.coordinates), streetLines);
+    drawRoutePaths(completedRoutes.map(route => route.coordinates), streetLines, coverage);
+    const drivenMeters = completedRoutes.reduce((total, route) => total + route.sampled_distance_meters, 0);
+    $("routeCount").textContent = `${completedRoutes.length} drives`;
+    $("routeDetail").textContent = `${completedRoutes.length} completed household drive${completedRoutes.length === 1 ? "" : "s"} shown. Blue lines are private routes; green dots are starts and red dots are finishes.`;
+    $("coverageDetail").textContent = `Green street segments are within 30 m of the ${readableDistance(drivenMeters)} sampled across these completed drives: about ${readableDistance(coverage.coveredMeters)} of ${readableDistance(coverage.totalMeters)} in the bundled road network. This household-wide view is private and calculated only in this browser.`;
+  } catch {
+    $("routeDetail").textContent = "Household coverage is unavailable right now. Nothing was shared outside this app.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Show household coverage";
+  }
+});
 document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
   const input = $(button.dataset.copy);
   try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }

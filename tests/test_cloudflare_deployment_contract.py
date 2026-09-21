@@ -120,11 +120,13 @@ def test_private_route_map_uses_authenticated_api_and_bundled_street_context():
     assert 'fetch("/api/v1/recorders/sessions"' in app
     assert 'id="routeMap"' in page
     assert 'id="coverageDetail"' in page
+    assert 'id="loadHouseholdCoverage"' in page
     assert "No third-party map service receives it." in page
     assert (ROOT / "private_app" / "maps" / "grosse-pointe.geojson").is_file()
     assert 'import { previewCoverage } from "./coverage_preview.mjs"' in app
     assert (ROOT / "private_app" / "coverage_preview.mjs").is_file()
     assert '"/coverage_preview.mjs"' in (ROOT / "private_app" / "service-worker.js").read_text()
+    assert 'completed household drive' in app
 
 
 def test_private_phone_shell_has_a_recent_signal_indicator_not_a_claimed_switch_state():

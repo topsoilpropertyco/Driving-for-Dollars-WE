@@ -182,6 +182,9 @@ textarea {
   font-weight: 800;
   cursor: pointer;
 }
+.route-action {
+  margin-top: 10px;
+}
 .primary {
   margin-top: 20px;
   background: var(--blue);

@@ -80,7 +80,7 @@
         <div class="copy-row"><input id="recorderDevice" readonly autocomplete="off" spellcheck="false" aria-label="Recorder device identifier"><button class="copy" data-copy="recorderDevice" type="button">Copy</button></div>
         <label for="recorderServer">Server URL</label>
         <div class="copy-row"><input id="recorderServer" type="password" readonly autocomplete="off" spellcheck="false" aria-label="Recorder server URL"><button class="copy" data-copy="recorderServer" type="button">Copy</button></div>
-        <p class="help">Use iPhone Location permission: <strong>Always</strong>, with Precise Location enabled. We will test Start and Stop before any real drive.</p>
+        <p class="help">Use iPhone Location permission: <strong>Always</strong>, with Precise Location enabled. We will test turning Continuous tracking on and off before any real drive.</p>
         <button class="secondary" id="checkRecorder" type="button">Check recorder</button>
         <p class="help" id="recorderHealth" aria-live="polite">No recorder check has run yet.</p>
       </div>
@@ -89,12 +89,13 @@
     <section class="card compact" aria-labelledby="route-title">
       <div class="card-heading"><div><p class="eyebrow">Private drive map</p><h2 id="route-title">Latest route</h2></div><span class="pill" id="routeCount">Not loaded</span></div>
       <p id="routeDetail">Your route is visible only after signing in to this household app. No third-party map service receives it.</p>
-      <p class="help" id="coverageDetail">Covered street segments will be highlighted after a route loads. This is a private per-drive preview, not a final all-time coverage total.</p>
+      <p class="help" id="coverageDetail">Covered street segments will be highlighted after a route loads. You can also make a private household-wide preview across completed drives; neither view is a final canonical coverage total.</p>
       <label class="route-selector" id="routeSelector" for="routeSession" hidden>Choose a completed drive
         <select id="routeSession" aria-label="Completed private drives"></select>
       </label>
       <canvas class="route-map" id="routeMap" width="600" height="360" role="img" aria-label="Map of the latest private drive"></canvas>
       <button class="secondary" id="loadRoute" type="button">Show latest route</button>
+      <button class="secondary route-action" id="loadHouseholdCoverage" type="button">Show household coverage</button>
     </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

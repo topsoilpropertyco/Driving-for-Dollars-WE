@@ -16,6 +16,13 @@ assert.deepEqual([...result.covered].sort(), ["Crossed|1", "Nearby|1"]);
 assert.ok(result.coveredMeters > 0);
 assert.ok(result.totalMeters > result.coveredMeters);
 
+// Separate drives must not create a fake connector that covers a road between
+// the two parking locations.
+const splitResult = previewCoverage([[[0, 0], [0.0001, 0]], [[0.0009, 0], [0.001, 0]]], [
+  { name: "Only in the gap", coordinates: [[0.0004, -0.0001], [0.0006, -0.0001]] },
+]);
+assert.equal(splitResult.covered.size, 0);
+
 // A route with fewer than two reports cannot claim any street coverage.
 assert.deepEqual(previewCoverage([[0, 0]], roads), { covered: new Set(), totalMeters: 0, coveredMeters: 0 });
 

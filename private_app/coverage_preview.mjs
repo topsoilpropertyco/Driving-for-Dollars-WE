@@ -35,10 +35,14 @@ function segmentDistance(firstStart, firstEnd, secondStart, secondEnd) {
   return Math.min(pointSegmentDistance(firstStart, secondStart, secondEnd), pointSegmentDistance(firstEnd, secondStart, secondEnd), pointSegmentDistance(secondStart, firstStart, firstEnd), pointSegmentDistance(secondEnd, firstStart, firstEnd));
 }
 
-export function previewCoverage(route, roadLines, thresholdMeters = 30) {
-  if (route.length < 2) return { covered: new Set(), totalMeters: 0, coveredMeters: 0 };
-  const referenceLatitude = route.reduce((total, point) => total + point[1], 0) / route.length;
-  const routeSegments = route.slice(1).map((point, index) => [meterPoint(route[index], referenceLatitude), meterPoint(point, referenceLatitude)]);
+export function previewCoverage(routeOrPaths, roadLines, thresholdMeters = 30) {
+  const routes = typeof routeOrPaths[0]?.[0] === "number" ? [routeOrPaths] : routeOrPaths;
+  const points = routes.flat();
+  if (points.length < 2) return { covered: new Set(), totalMeters: 0, coveredMeters: 0 };
+  const referenceLatitude = points.reduce((total, point) => total + point[1], 0) / points.length;
+  // Preserve drive boundaries: a straight line must never be inferred between
+  // the finish of one drive and the start of another.
+  const routeSegments = routes.flatMap(route => route.slice(1).map((point, index) => [meterPoint(route[index], referenceLatitude), meterPoint(point, referenceLatitude)]));
   const seen = new Set(), covered = new Set();
   let totalMeters = 0, coveredMeters = 0;
   for (const road of roadLines) {
