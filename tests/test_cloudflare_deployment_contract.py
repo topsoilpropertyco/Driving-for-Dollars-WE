@@ -106,3 +106,14 @@ def test_private_phone_shell_only_generates_recorder_setup_after_authenticated_b
     assert 'id="checkRecorder"' in page
     assert "navigator.clipboard.writeText" in app
     assert 'localStorage.setItem("recorder' not in app
+
+
+def test_private_route_map_uses_authenticated_api_and_bundled_street_context():
+    worker = (ROOT / "cloudflare" / "worker.js").read_text()
+    app = (ROOT / "private_app" / "app.js").read_text()
+    page = (ROOT / "private_app" / "index.html").read_text()
+    assert 'url.pathname === "/api/v1/recorders/latest-route"' in worker
+    assert 'fetch("/api/v1/recorders/latest-route"' in app
+    assert 'id="routeMap"' in page
+    assert "No third-party map service receives it." in page
+    assert (ROOT / "private_app" / "maps" / "grosse-pointe.geojson").is_file()
