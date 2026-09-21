@@ -1,3 +1,5 @@
+import { previewCoverage } from "./coverage_preview.mjs";
+
 const QUEUE_KEY = "five-pointes.private-action-queue.v1";
 const DEVICE_KEY = "five-pointes.private-device.v1";
 const SEQUENCE_KEY = "five-pointes.private-action-sequence.v1";
@@ -217,7 +219,8 @@ async function roads() {
   }));
   streetSegments = collections.flatMap(collection => (collection.features || []).flatMap(feature => {
     const geometry = feature.geometry || {};
-    return geometry.type === "LineString" ? [geometry.coordinates] : geometry.type === "MultiLineString" ? geometry.coordinates : [];
+    const name = feature.properties?.name || "Unnamed street";
+    return (geometry.type === "LineString" ? [geometry.coordinates] : geometry.type === "MultiLineString" ? geometry.coordinates : []).map(coordinates => ({ name, coordinates }));
   }));
   return streetSegments;
 }
@@ -235,7 +238,7 @@ function projectRoute(points, width, height) {
   return point => [((point[0] - west) / spanX) * width, height - ((point[1] - south) / spanY) * height];
 }
 
-function drawRoute(route, roadLines) {
+function drawRoute(route, roadLines, coverage) {
   const canvas = $("routeMap");
   const width = canvas.clientWidth || 600;
   const height = width * 0.6;
@@ -250,13 +253,23 @@ function drawRoute(route, roadLines) {
   context.strokeStyle = "#ccd5e3";
   context.lineWidth = 1;
   for (const road of roadLines) {
-    if (!road.length) continue;
+    if (!road.coordinates.length) continue;
     context.beginPath();
-    road.forEach((point, index) => {
+    road.coordinates.forEach((point, index) => {
       const [x, y] = project(point);
       if (index) context.lineTo(x, y); else context.moveTo(x, y);
     });
     context.stroke();
+  }
+  context.strokeStyle = "#55a978";
+  context.lineWidth = 3;
+  for (const road of roadLines) {
+    for (let index = 1; index < road.coordinates.length; index += 1) {
+      if (!coverage.covered.has(`${road.name}|${index}`)) continue;
+      const [startX, startY] = project(road.coordinates[index - 1]);
+      const [endX, endY] = project(road.coordinates[index]);
+      context.beginPath(); context.moveTo(startX, startY); context.lineTo(endX, endY); context.stroke();
+    }
   }
   context.strokeStyle = "#2d6df6";
   context.lineWidth = 4;
@@ -315,9 +328,12 @@ async function loadSelectedRoute() {
       $("routeDetail").textContent = "There are not enough points for a route yet.";
       return;
     }
-    drawRoute(route.coordinates, await roads());
+    const streetLines = await roads();
+    const coverage = previewCoverage(route.coordinates, streetLines);
+    drawRoute(route.coordinates, streetLines, coverage);
     $("routeCount").textContent = `${route.point_count} points`;
     $("routeDetail").textContent = `Selected drive: ${readableDistance(route.sampled_distance_meters)} sampled over ${readableDuration(route.duration_seconds)} with ${route.point_count} points. Largest reporting gap: ${readableDistance(route.largest_gap_meters)}. Blue is the private route; green is the start and red is the finish.`;
+    $("coverageDetail").textContent = `Green street segments are within 30 m of this selected drive: about ${readableDistance(coverage.coveredMeters)} of ${readableDistance(coverage.totalMeters)} in the bundled road network. This is a private per-drive preview.`;
   } catch {
     $("routeDetail").textContent = "The private route is unavailable right now. Nothing was shared outside this app.";
   } finally {

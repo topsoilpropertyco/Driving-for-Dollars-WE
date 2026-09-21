@@ -26,6 +26,21 @@ The next refinement before a real release is stable persisted segment IDs and
 explicit city attribution on each canonical interval, so historical coverage
 can be compared across OSM refreshes.
 
+## Private pilot drive preview
+
+The protected Five Points phone app now includes a browser-only preview for a
+single private drive. It compares the selected route to the bundled street
+geometry using a 30 m segment-to-segment proximity threshold, highlights the
+matching road segments in green, and reports the matching and total street
+lengths. The raw route remains inside the household Access session; the
+preview neither persists coverage nor calls an outside map or analytics
+service.
+
+This is deliberately labelled a **per-drive preview**, not an all-time or
+canonical coverage total. The UTM-backed processing above remains the release
+path for a verified, durable coverage dataset once the household has approved
+the data-retention and real-road-data workflow.
+
 ## Acceptance fixtures
 
 The production geographic test suite must prove all of these with tiny
