@@ -18,7 +18,7 @@
 - [x] Exercise the private Worker household-action API against a synthetic D1 contract double.
 - [x] Provision the private D1 database, private R2 bucket, and fail-closed Worker shell.
 - [x] Configure Cloudflare Access, one-time email PIN, and the two-household-member allow-list.
-- [ ] Approve an external recorder pilot.
+- [x] Approve an external recorder pilot.
 
 ## Before production data
 
@@ -36,7 +36,7 @@
 - [x] Measure coverage against a deduplicated road network and atomically replace all pipeline artifacts.
 - [x] Share canonical road intervals between coverage and undriven output.
 - [x] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
-- [ ] Complete the recorder pilot.
+- [ ] Complete the recorder pilot (Traccar one-phone setup, locked-screen drive, retry, and Stop verification).
 - [x] Provision and deploy the approved authenticated private API and phone-side offline queue.
 - [ ] Complete two-device field usability testing.
 - [x] Approve external hosting and deployment.

@@ -26,13 +26,30 @@ malformed events, store private locations separately from public results,
 acknowledge accepted events, and support queued retry. Stopping must explicitly
 close a session; points received afterward require a new session or review.
 
-## Candidate options
+## Selected pilot: Traccar Client
 
-- A native recorder with a secure HTTPS endpoint, such as OwnTracks in its
-  frequent movement mode.
-- A native tracker/server pair such as Traccar, only if its hosted/self-hosted
-  setup remains acceptable after a privacy and cost review.
-- A purpose-built native companion, only if the existing clients fail the pilot.
+The household approved a bounded **Traccar Client** pilot on 2026-09-20. The
+pilot uses a dedicated, write-only Cloudflare Worker that accepts the standard
+OsmAnd/Traccar location fields. It is deliberately separate from the
+Cloudflare-Access-protected household application: a native tracker cannot
+complete browser email authentication on every location update.
+
+Each private household session can create one random device identifier and one
+random 256-bit device credential. Only a SHA-256 hash is stored in D1. The
+credential appears only in the signed-in setup screen, is never committed or
+logged, and can be revoked by setting `revoked_at` before any future pilot.
+The recorder ingress has no list, map, export, or point-read endpoint.
+
+The pilot is **not** a production data launch: no property import, public
+dashboard update, or street-coverage replacement is performed by the recorder
+endpoint. The first points remain private in D1 for pilot validation only.
+
+## Alternatives considered
+
+- OwnTracks with a secure HTTPS endpoint: kept as the fallback if Traccar does
+  not meet the locked-screen test.
+- A purpose-built native companion: deferred unless both mature native clients
+  fail the pilot.
 
 No candidate is selected or connected yet. The web app itself is not the
 background recorder.
@@ -61,7 +78,8 @@ or response bodies.
 
 ## Approval gate
 
-Running the pilot requires approval to install/configure a candidate recorder
-and connect it to a new protected endpoint. This repository currently contains
-only the integration contract and synthetic UX state; it does not connect to
-any device or GPS service.
+The pilot is approved. It requires a household member to install Traccar Client
+on one iPhone and complete the private in-app setup. The result determines
+whether Traccar becomes the production recorder or is rejected in favor of the
+fallback; no raw GPS is to be copied into issue text, Git, CI, chat, or a
+public dashboard.
