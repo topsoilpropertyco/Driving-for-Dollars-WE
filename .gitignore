@@ -26,3 +26,4 @@ venv/
 # Local Cloudflare resource bindings. Resource IDs never enter Git.
 cloudflare/wrangler.private.toml
 cloudflare/.wrangler/
+cloudflare/.secrets.json

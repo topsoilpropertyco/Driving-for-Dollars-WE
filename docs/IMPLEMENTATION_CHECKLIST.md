@@ -16,6 +16,8 @@
 - [x] Build an unprovisioned private Cloudflare Worker/D1/R2 deployment package.
 - [x] Exercise the private Worker import API against a synthetic D1 contract double.
 - [x] Exercise the private Worker household-action API against a synthetic D1 contract double.
+- [x] Provision the private D1 database, private R2 bucket, and fail-closed Worker shell.
+- [ ] Configure Cloudflare Access and the two-household-member allow-list.
 - [ ] Approve an external recorder pilot.
 
 ## Before production data

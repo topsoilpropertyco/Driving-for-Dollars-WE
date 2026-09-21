@@ -19,12 +19,16 @@ committed.
   never by GitHub Pages. It queues household actions on the phone while offline
   and removes only server-confirmed action IDs after a sync.
 
-## Provisioning is intentionally blocked
+## Provisioning status
 
-Before running any Cloudflare command, obtain the owner's explicit approval to
-create the Cloudflare resources and complete any required billing/R2 checkout.
-Then populate the generated resource IDs through the Cloudflare dashboard or
-secret/configuration mechanisms—not by committing them to this repository.
+The D1 database, private R2 bucket, and Worker shell are provisioned. The
+deployment is still fail-closed: Cloudflare Access and the `ALLOWED_EMAILS`
+Worker secret must be configured before the private app can load for anyone.
+Resource identifiers remain only in ignored local deployment configuration,
+never in Git.
+
+Any future access-policy, storage-retention, or production-data change still
+requires the owner's explicit approval.
 
 ## First production acceptance checks
 
