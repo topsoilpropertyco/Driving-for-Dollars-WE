@@ -97,12 +97,33 @@ function recorderSessions(rows) {
   return sessions;
 }
 
+function metersBetween(first, second) {
+  const radians = degrees => degrees * Math.PI / 180;
+  const earthRadiusMeters = 6_371_000;
+  const latitudeDelta = radians(Number(second.latitude) - Number(first.latitude));
+  const longitudeDelta = radians(Number(second.longitude) - Number(first.longitude));
+  const a = Math.sin(latitudeDelta / 2) ** 2 + Math.cos(radians(Number(first.latitude))) * Math.cos(radians(Number(second.latitude))) * Math.sin(longitudeDelta / 2) ** 2;
+  return earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function routePayload(session) {
+  let distanceMeters = 0;
+  let largestGapMeters = 0;
+  for (let index = 1; index < session.length; index += 1) {
+    const gap = metersBetween(session[index - 1], session[index]);
+    distanceMeters += gap;
+    largestGapMeters = Math.max(largestGapMeters, gap);
+  }
+  const started = Date.parse(session[0]?.recorded_at || "");
+  const ended = Date.parse(session.at(-1)?.recorded_at || "");
   return {
     session_id: session[0]?.recorded_at || null,
     point_count: session.length,
     started_at: session[0]?.recorded_at || null,
     ended_at: session.at(-1)?.recorded_at || null,
+    sampled_distance_meters: Math.round(distanceMeters),
+    largest_gap_meters: Math.round(largestGapMeters),
+    duration_seconds: Number.isFinite(started) && Number.isFinite(ended) ? Math.max(0, Math.round((ended - started) / 1000)) : 0,
     // [longitude, latitude] keeps the payload compatible with GeoJSON tools.
     coordinates: session.map(row => [Number(row.longitude), Number(row.latitude)]),
   };
@@ -120,7 +141,7 @@ async function recorderSessionList(env, email) {
   const sessions = recorderSessions(await recorderRoutePoints(env, email));
   return json({ sessions: sessions.slice(-20).reverse().map(session => {
     const payload = routePayload(session);
-    return { session_id: payload.session_id, point_count: payload.point_count, started_at: payload.started_at, ended_at: payload.ended_at };
+    return { session_id: payload.session_id, point_count: payload.point_count, started_at: payload.started_at, ended_at: payload.ended_at, sampled_distance_meters: payload.sampled_distance_meters, largest_gap_meters: payload.largest_gap_meters, duration_seconds: payload.duration_seconds };
   }) });
 }
 

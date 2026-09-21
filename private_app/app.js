@@ -219,6 +219,13 @@ function drawRoute(route, roadLines) {
 }
 
 let routeSessionsLoaded = false;
+function readableDistance(meters) {
+  return meters >= 1609 ? `${(meters / 1609.344).toFixed(1)} mi` : `${Math.round(meters)} m`;
+}
+function readableDuration(seconds) {
+  const minutes = Math.round(seconds / 60);
+  return minutes < 1 ? "under 1 min" : `${minutes} min`;
+}
 async function loadRouteSessions() {
   if (routeSessionsLoaded) return;
   const response = await fetch("/api/v1/recorders/sessions", { cache: "no-store" });
@@ -228,7 +235,7 @@ async function loadRouteSessions() {
   select.replaceChildren(...sessions.map(session => {
     const option = document.createElement("option");
     option.value = session.session_id;
-    option.textContent = `${new Date(session.started_at).toLocaleString()} — ${session.point_count} points`;
+    option.textContent = `${new Date(session.started_at).toLocaleString()} — ${readableDistance(session.sampled_distance_meters)}, ${session.point_count} points`;
     return option;
   }));
   $("routeSelector").hidden = sessions.length < 2;
@@ -251,7 +258,7 @@ async function loadSelectedRoute() {
     }
     drawRoute(route.coordinates, await roads());
     $("routeCount").textContent = `${route.point_count} points`;
-    $("routeDetail").textContent = `Latest drive: ${new Date(route.started_at).toLocaleString()} to ${new Date(route.ended_at).toLocaleTimeString()}. Blue is the private route; green is the start and red is the finish.`;
+    $("routeDetail").textContent = `Selected drive: ${readableDistance(route.sampled_distance_meters)} sampled over ${readableDuration(route.duration_seconds)} with ${route.point_count} points. Largest reporting gap: ${readableDistance(route.largest_gap_meters)}. Blue is the private route; green is the start and red is the finish.`;
   } catch {
     $("routeDetail").textContent = "The private route is unavailable right now. Nothing was shared outside this app.";
   } finally {
