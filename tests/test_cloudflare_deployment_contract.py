@@ -91,3 +91,13 @@ def test_recorder_ingress_is_separate_from_household_access_and_has_no_read_rout
     assert "return response(404)" in ingress
     assert "recorder_points" in migration
     assert "00000000-0000-0000-0000-000000000000" in config
+
+
+def test_private_phone_shell_only_generates_recorder_setup_after_authenticated_bootstrap():
+    page = (ROOT / "private_app" / "index.html").read_text()
+    app = (ROOT / "private_app" / "app.js").read_text()
+    assert 'id="prepareRecorder"' in page
+    assert 'id="recorderConfig" hidden' in page
+    assert 'fetch("/api/v1/recorders/bootstrap"' in app
+    assert "navigator.clipboard.writeText" in app
+    assert 'localStorage.setItem("recorder' not in app

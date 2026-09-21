@@ -52,6 +52,21 @@
       <p id="syncDetail">Nothing waiting to send.</p>
       <button class="secondary" id="syncNow" type="button">Sync now</button>
     </section>
+
+    <section class="card compact" aria-labelledby="recorder-title">
+      <div class="card-heading"><div><p class="eyebrow">Driving recorder</p><h2 id="recorder-title">Prepare this iPhone</h2></div><span class="pill">Pilot</span></div>
+      <p id="recorderDetail">Create a private one-phone setup for the background-recording pilot. No location is collected until you start recording in Traccar.</p>
+      <button class="secondary" id="prepareRecorder" type="button">Prepare recorder</button>
+      <div class="recorder-config" id="recorderConfig" hidden>
+        <p><strong>1.</strong> Install Traccar Client from the App Store.</p>
+        <p><strong>2.</strong> In its settings, enter these values exactly. They are private to this phone—do not share them.</p>
+        <label for="recorderDevice">Device identifier</label>
+        <div class="copy-row"><input id="recorderDevice" readonly aria-label="Recorder device identifier"><button class="copy" data-copy="recorderDevice" type="button">Copy</button></div>
+        <label for="recorderServer">Server URL</label>
+        <div class="copy-row"><input id="recorderServer" readonly aria-label="Recorder server URL"><button class="copy" data-copy="recorderServer" type="button">Copy</button></div>
+        <p class="help">Use iPhone Location permission: <strong>Always</strong>, with Precise Location enabled. We will test Start and Stop before any real drive.</p>
+      </div>
+    </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="app.js"></script>

@@ -72,6 +72,35 @@ $("captureForm").addEventListener("submit", async event => {
   }
 });
 $("syncNow").addEventListener("click", sync);
+$("prepareRecorder").addEventListener("click", async () => {
+  const button = $("prepareRecorder");
+  if (button.disabled) return;
+  button.disabled = true;
+  button.textContent = "Preparing…";
+  try {
+    const response = await fetch("/api/v1/recorders/bootstrap", {
+      method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+    });
+    if (!response.ok) throw new Error("recorder setup failed");
+    const setup = await response.json();
+    $("recorderDevice").value = setup.device_id;
+    $("recorderServer").value = setup.server_url;
+    $("recorderConfig").hidden = false;
+    $("recorderDetail").textContent = "This phone is ready for the pilot. Finish the two fields below in Traccar before starting a drive.";
+    button.hidden = true;
+    toast("Private recorder setup is ready on this phone.");
+  } catch {
+    toast("Recorder setup is unavailable. Nothing was changed on this phone.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Prepare recorder";
+  }
+});
+document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
+  const input = $(button.dataset.copy);
+  try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }
+  catch { input.select(); toast("Select and copy the private value."); }
+}));
 window.addEventListener("online", sync);
 window.addEventListener("offline", () => refreshStatus());
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-worker.js").catch(() => {});
