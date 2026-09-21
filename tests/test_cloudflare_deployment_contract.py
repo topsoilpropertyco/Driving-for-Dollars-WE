@@ -126,6 +126,7 @@ def test_private_route_map_uses_authenticated_api_and_bundled_street_context():
     assert 'import { previewCoverage } from "./coverage_preview.mjs"' in app
     assert (ROOT / "private_app" / "coverage_preview.mjs").is_file()
     assert '"/coverage_preview.mjs"' in (ROOT / "private_app" / "service-worker.js").read_text()
+    assert "self.skipWaiting()" in (ROOT / "private_app" / "service-worker.js").read_text()
     assert 'completed household drive' in app
 
 
