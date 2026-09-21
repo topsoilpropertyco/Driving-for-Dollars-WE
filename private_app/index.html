@@ -69,6 +69,13 @@
         <p class="help" id="recorderHealth" aria-live="polite">No recorder check has run yet.</p>
       </div>
     </section>
+
+    <section class="card compact" aria-labelledby="route-title">
+      <div class="card-heading"><div><p class="eyebrow">Private drive map</p><h2 id="route-title">Latest route</h2></div><span class="pill" id="routeCount">Not loaded</span></div>
+      <p id="routeDetail">Your route is visible only after signing in to this household app. No third-party map service receives it.</p>
+      <canvas class="route-map" id="routeMap" width="600" height="360" role="img" aria-label="Map of the latest private drive"></canvas>
+      <button class="secondary" id="loadRoute" type="button">Show latest route</button>
+    </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="app.js"></script>

@@ -69,6 +69,33 @@ async function recorderStatus(env, email) {
   });
 }
 
+const ROUTE_SESSION_GAP_MS = 15 * 60 * 1000;
+
+async function latestRecorderRoute(env, email) {
+  // Coordinates are returned only to the authenticated household member who
+  // created the recorder. Nothing here is served by the public ingress Worker.
+  const result = await env.DB.prepare(
+    "SELECT p.recorded_at, p.latitude, p.longitude FROM recorder_points p JOIN recorder_devices d ON d.device_id = p.device_id WHERE d.created_by_email = ? AND d.revoked_at IS NULL ORDER BY p.recorded_at DESC LIMIT 1000"
+  ).bind(email).all();
+  const rows = (result.results || []).reverse().filter(row =>
+    typeof row.recorded_at === "string" && Number.isFinite(Number(row.latitude)) && Number.isFinite(Number(row.longitude))
+  );
+  let sessionStart = 0;
+  for (let index = 1; index < rows.length; index += 1) {
+    const previous = Date.parse(rows[index - 1].recorded_at);
+    const current = Date.parse(rows[index].recorded_at);
+    if (!Number.isFinite(previous) || !Number.isFinite(current) || current - previous > ROUTE_SESSION_GAP_MS) sessionStart = index;
+  }
+  const session = rows.slice(sessionStart);
+  return json({
+    point_count: session.length,
+    started_at: session[0]?.recorded_at || null,
+    ended_at: session.at(-1)?.recorded_at || null,
+    // [longitude, latitude] keeps the payload compatible with GeoJSON tools.
+    coordinates: session.map(row => [Number(row.longitude), Number(row.latitude)]),
+  });
+}
+
 function validUtc(value) {
   return typeof value === "string" && value.endsWith("Z") && !Number.isNaN(Date.parse(value));
 }
@@ -215,6 +242,7 @@ export default {
       if (request.method === "GET" && url.pathname === "/api/health") return json({ status: "private-ready" });
       if (request.method === "POST" && url.pathname === "/api/v1/recorders/bootstrap") return bootstrapRecorder(request, env, email);
       if (request.method === "GET" && url.pathname === "/api/v1/recorders/status") return recorderStatus(env, email);
+      if (request.method === "GET" && url.pathname === "/api/v1/recorders/latest-route") return latestRecorderRoute(env, email);
       if (request.method === "POST" && url.pathname === "/api/v1/actions") return actions(request, env);
       if (request.method === "POST" && url.pathname === "/api/v1/import-plans") return stageImportPlan(request, env);
       const advance = url.pathname.match(/^\/api\/v1\/import-plans\/([^/]+)\/advance$/);

@@ -114,6 +114,105 @@ $("checkRecorder").addEventListener("click", async () => {
     button.textContent = "Check recorder";
   }
 });
+
+const STREET_FILES = [
+  "/maps/grosse-pointe.geojson", "/maps/grosse-pointe-farms.geojson", "/maps/grosse-pointe-park.geojson",
+  "/maps/grosse-pointe-shores.geojson", "/maps/grosse-pointe-woods.geojson",
+];
+let streetSegments;
+
+async function roads() {
+  if (streetSegments) return streetSegments;
+  const collections = await Promise.all(STREET_FILES.map(async path => {
+    const response = await fetch(path, { cache: "force-cache" });
+    if (!response.ok) throw new Error("map data unavailable");
+    return response.json();
+  }));
+  streetSegments = collections.flatMap(collection => (collection.features || []).flatMap(feature => {
+    const geometry = feature.geometry || {};
+    return geometry.type === "LineString" ? [geometry.coordinates] : geometry.type === "MultiLineString" ? geometry.coordinates : [];
+  }));
+  return streetSegments;
+}
+
+function projectRoute(points, width, height) {
+  const longitudes = points.map(point => point[0]);
+  const latitudes = points.map(point => point[1]);
+  const pad = 0.0008;
+  const west = Math.min(...longitudes) - pad;
+  const east = Math.max(...longitudes) + pad;
+  const south = Math.min(...latitudes) - pad;
+  const north = Math.max(...latitudes) + pad;
+  const spanX = Math.max(east - west, pad * 2);
+  const spanY = Math.max(north - south, pad * 2);
+  return point => [((point[0] - west) / spanX) * width, height - ((point[1] - south) / spanY) * height];
+}
+
+function drawRoute(route, roadLines) {
+  const canvas = $("routeMap");
+  const width = canvas.clientWidth || 600;
+  const height = width * 0.6;
+  const pixelRatio = window.devicePixelRatio || 1;
+  canvas.width = Math.round(width * pixelRatio);
+  canvas.height = Math.round(height * pixelRatio);
+  const context = canvas.getContext("2d");
+  context.scale(pixelRatio, pixelRatio);
+  context.fillStyle = "#f4f7fb";
+  context.fillRect(0, 0, width, height);
+  const project = projectRoute(route, width, height);
+  context.strokeStyle = "#ccd5e3";
+  context.lineWidth = 1;
+  for (const road of roadLines) {
+    if (!road.length) continue;
+    context.beginPath();
+    road.forEach((point, index) => {
+      const [x, y] = project(point);
+      if (index) context.lineTo(x, y); else context.moveTo(x, y);
+    });
+    context.stroke();
+  }
+  context.strokeStyle = "#2d6df6";
+  context.lineWidth = 4;
+  context.lineJoin = "round";
+  context.lineCap = "round";
+  context.beginPath();
+  route.forEach((point, index) => {
+    const [x, y] = project(point);
+    if (index) context.lineTo(x, y); else context.moveTo(x, y);
+  });
+  context.stroke();
+  for (const [point, color] of [[route[0], "#167a59"], [route.at(-1), "#d13f38"]]) {
+    const [x, y] = project(point);
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(x, y, 5, 0, Math.PI * 2);
+    context.fill();
+  }
+}
+
+$("loadRoute").addEventListener("click", async () => {
+  const button = $("loadRoute");
+  button.disabled = true;
+  button.textContent = "Loading…";
+  try {
+    const response = await fetch("/api/v1/recorders/latest-route", { cache: "no-store" });
+    if (!response.ok) throw new Error("route unavailable");
+    const route = await response.json();
+    if (route.coordinates.length < 2) {
+      $("routeCount").textContent = "No drive yet";
+      $("routeDetail").textContent = "There are not enough points for a route yet.";
+      return;
+    }
+    drawRoute(route.coordinates, await roads());
+    $("routeCount").textContent = `${route.point_count} points`;
+    $("routeDetail").textContent = `Latest drive: ${new Date(route.started_at).toLocaleString()} to ${new Date(route.ended_at).toLocaleTimeString()}. Blue is the private route; green is the start and red is the finish.`;
+  } catch {
+    $("routeDetail").textContent = "The private route is unavailable right now. Nothing was shared outside this app.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Show latest route";
+  }
+});
 document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
   const input = $(button.dataset.copy);
   try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }
