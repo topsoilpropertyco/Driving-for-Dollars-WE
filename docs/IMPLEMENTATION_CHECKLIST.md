@@ -17,12 +17,12 @@
 - [x] Exercise the private Worker import API against a synthetic D1 contract double.
 - [x] Exercise the private Worker household-action API against a synthetic D1 contract double.
 - [x] Provision the private D1 database, private R2 bucket, and fail-closed Worker shell.
-- [ ] Configure Cloudflare Access and the two-household-member allow-list.
+- [x] Configure Cloudflare Access, one-time email PIN, and the two-household-member allow-list.
 - [ ] Approve an external recorder pilot.
 
 ## Before production data
 
-- [ ] Create protected household access and API after approval.
+- [x] Create protected household access and API after approval.
 - [ ] Verify parcel data rights and coverage.
 - [x] Define CSV identity, provenance, dry-run, and no-overwrite contract.
 - [x] Add synthetic CSV import-plan validation and privacy regression tests.
@@ -37,7 +37,7 @@
 - [x] Share canonical road intervals between coverage and undriven output.
 - [x] Add geometric fixture tests for partial, duplicate, divided, and boundary roads.
 - [ ] Complete the recorder pilot.
-- [ ] Provision and deploy the approved authenticated private API and phone-side offline queue.
+- [x] Provision and deploy the approved authenticated private API and phone-side offline queue.
 - [ ] Complete two-device field usability testing.
-- [ ] Approve external hosting and deployment.
+- [x] Approve external hosting and deployment.
 - [ ] Import real property data only after review.

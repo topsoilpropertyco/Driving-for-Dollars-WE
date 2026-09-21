@@ -50,17 +50,26 @@ async function sync() {
 
 $("captureForm").addEventListener("submit", async event => {
   event.preventDefault();
+  const submit = $("captureSubmit");
+  if (submit.disabled) return;
   const identity = $("propertyIdentity").value.trim();
   const stage = $("stage").value;
   const note = $("note").value.trim();
   if (!identity || !stages.has(stage)) return toast("Enter a valid property ID and stage.");
-  enqueue(action("property_saved", identity, {}));
-  enqueue(action("stage_changed", identity, { stage }));
-  if (note) enqueue(action("note_added", identity, { note }));
-  $("note").value = "";
-  refreshStatus();
-  toast("Captured locally. It will sync automatically when available.");
-  await sync();
+  submit.disabled = true;
+  submit.textContent = "Saving…";
+  try {
+    enqueue(action("property_saved", identity, {}));
+    enqueue(action("stage_changed", identity, { stage }));
+    if (note) enqueue(action("note_added", identity, { note }));
+    $("captureForm").reset();
+    refreshStatus();
+    toast("Captured safely. Ready for the next home.");
+    await sync();
+  } finally {
+    submit.disabled = false;
+    submit.textContent = "Save observation";
+  }
 });
 $("syncNow").addEventListener("click", sync);
 window.addEventListener("online", sync);

@@ -56,3 +56,13 @@ def test_private_phone_shell_is_not_part_of_the_public_pages_artifact():
     assert "localStorage" in app
     assert 'url.pathname.startsWith("/api/")' in service_worker
     assert "env.ASSETS.fetch(request)" in worker
+
+
+def test_private_capture_shell_prevents_double_taps_and_resets_after_a_local_capture():
+    app = (ROOT / "private_app" / "app.js").read_text()
+    page = (ROOT / "private_app" / "index.html").read_text()
+    assert 'id="captureSubmit"' in page
+    assert "if (submit.disabled) return" in app
+    assert 'submit.textContent = "Saving…"' in app
+    assert '$("captureForm").reset()' in app
+    assert 'toast("Captured safely. Ready for the next home.")' in app
