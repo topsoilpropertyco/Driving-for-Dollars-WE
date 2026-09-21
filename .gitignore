@@ -27,4 +27,5 @@ venv/
 cloudflare/wrangler.private.toml
 cloudflare/wrangler.recorder.private.toml
 cloudflare/.wrangler/
+.wrangler/
 cloudflare/.secrets.json
