@@ -3,8 +3,10 @@ main = "worker.js"
 compatibility_date = "2026-09-20"
 
 [assets]
-directory = "./private_app"
+directory = "../private_app"
 binding = "ASSETS"
+# Do not allow the assets layer to bypass the Worker allow-list check.
+run_worker_first = true
 
 # Bindings are intentionally declared without account IDs, database IDs, bucket
 # names, emails, tokens, or secrets. Provisioning fills these in outside Git.

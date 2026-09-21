@@ -22,3 +22,7 @@ data/private/
 __pycache__/
 *.pyc
 venv/
+
+# Local Cloudflare resource bindings. Resource IDs never enter Git.
+cloudflare/wrangler.private.toml
+cloudflare/.wrangler/

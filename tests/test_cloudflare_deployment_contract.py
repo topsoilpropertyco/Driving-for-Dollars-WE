@@ -19,7 +19,8 @@ def test_deployment_config_has_placeholders_not_real_resource_identifiers():
     assert "00000000-0000-0000-0000-000000000000" in text
     assert "account_id" not in text
     assert "ALLOWED_EMAILS" in text
-    assert 'directory = "./private_app"' in text
+    assert 'directory = "../private_app"' in text
+    assert "run_worker_first = true" in text
 
 
 def test_private_schema_and_readme_keep_gps_storage_private():
