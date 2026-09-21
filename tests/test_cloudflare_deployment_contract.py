@@ -117,3 +117,14 @@ def test_private_route_map_uses_authenticated_api_and_bundled_street_context():
     assert 'id="routeMap"' in page
     assert "No third-party map service receives it." in page
     assert (ROOT / "private_app" / "maps" / "grosse-pointe.geojson").is_file()
+
+
+def test_private_phone_shell_has_a_recent_signal_indicator_not_a_claimed_switch_state():
+    app = (ROOT / "private_app" / "app.js").read_text()
+    page = (ROOT / "private_app" / "index.html").read_text()
+    assert 'id="trackerSignal"' in page
+    assert 'id="trackerState"' in page
+    assert "recent private location report" in page
+    assert "TRACKER_FRESH_MS" in app
+    assert 'fetch("/api/v1/recorders/status"' in app
+    assert 'setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000)' in app

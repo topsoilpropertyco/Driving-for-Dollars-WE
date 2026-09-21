@@ -22,6 +22,34 @@ function refreshStatus(message) {
   $("connection").textContent = connected ? "Online — private sync available" : "Offline — captures stay on this phone";
   $("connection").classList.toggle("offline", !connected);
 }
+const TRACKER_FRESH_MS = 2 * 60 * 1000;
+function renderTrackerSignal(status) {
+  const lastSeen = status.latest_received_at ? Date.parse(status.latest_received_at) : NaN;
+  const fresh = Number.isFinite(lastSeen) && Date.now() - lastSeen <= TRACKER_FRESH_MS;
+  const signal = $("trackerSignal");
+  signal.dataset.state = fresh ? "active" : status.active_devices ? "quiet" : "off";
+  if (fresh) {
+    $("trackerState").textContent = "Tracking is working";
+    $("trackerDetail").textContent = "A private location report arrived within the last two minutes.";
+  } else if (!status.active_devices) {
+    $("trackerState").textContent = "Recorder is not configured";
+    $("trackerDetail").textContent = "Prepare this iPhone before starting a drive.";
+  } else {
+    $("trackerState").textContent = "No recent tracker signal";
+    $("trackerDetail").textContent = "Turn on Continuous tracking in Traccar and begin moving. This light turns green after a private report arrives.";
+  }
+}
+async function refreshTrackerSignal() {
+  try {
+    const response = await fetch("/api/v1/recorders/status", { cache: "no-store" });
+    if (!response.ok) throw new Error("tracker status unavailable");
+    renderTrackerSignal(await response.json());
+  } catch {
+    $("trackerSignal").dataset.state = "checking";
+    $("trackerState").textContent = "Tracker signal unavailable";
+    $("trackerDetail").textContent = "Your Traccar settings were not changed. The private app will try again shortly.";
+  }
+}
 function nextSequence() {
   const value = Number(localStorage.getItem(SEQUENCE_KEY) || 0) + 1;
   localStorage.setItem(SEQUENCE_KEY, String(value));
@@ -220,5 +248,8 @@ document.querySelectorAll("[data-copy]").forEach(button => button.addEventListen
 }));
 window.addEventListener("online", sync);
 window.addEventListener("offline", () => refreshStatus());
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refreshTrackerSignal(); });
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-worker.js").catch(() => {});
 refreshStatus();
+refreshTrackerSignal();
+setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000);

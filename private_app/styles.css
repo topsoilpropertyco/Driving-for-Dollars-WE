@@ -85,6 +85,35 @@ h2 {
   background: #fff2df;
   color: #a55d00;
 }
+.tracker-signal {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 12px;
+  background: #fff;
+}
+.tracker-light {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border-radius: 50%;
+  background: #98a2b3;
+  box-shadow: 0 0 0 5px #eaecf0;
+}
+.tracker-signal[data-state="active"] .tracker-light {
+  background: #17a36b;
+  box-shadow: 0 0 0 5px #d9f5e8, 0 0 16px #17a36b;
+}
+.tracker-signal[data-state="checking"] .tracker-light {
+  background: #e9a23b;
+  box-shadow: 0 0 0 5px #fff1d7;
+}
+.tracker-signal .eyebrow { margin-bottom: 2px; }
+.tracker-signal strong { display: block; font-size: 15px; }
+.tracker-signal p:last-child { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
 .card {
   margin-top: 16px;
   border: 1px solid var(--line);
