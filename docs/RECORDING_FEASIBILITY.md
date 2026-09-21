@@ -4,9 +4,9 @@
 
 The recording workflow must feel like a simple activity recorder:
 
-1. Open a recorder and tap **Start**.
+1. Open Traccar Client and turn **Continuous tracking** on.
 2. Drive normally, including while the phone is locked or the map app is open.
-3. Tap **Stop**.
+3. Turn **Continuous tracking** off after parking.
 4. The recording is automatically delivered to the household app.
 5. The app validates and processes it without a GPX export chore.
 
@@ -23,8 +23,8 @@ optional speed/course, session identity, and an idempotency key
 
 The production receiver must authenticate the device, reject replayed or
 malformed events, store private locations separately from public results,
-acknowledge accepted events, and support queued retry. Stopping must explicitly
-close a session; points received afterward require a new session or review.
+acknowledge accepted events, and support queued retry. Turning tracking off
+must end delivery; points received afterward require a new session or review.
 
 ## Selected pilot: Traccar Client
 
@@ -75,11 +75,11 @@ or response bodies.
 
 ## Pilot acceptance checklist
 
-- [ ] Both phones can start and stop in under ten seconds.
+- [ ] Both phones can turn Continuous tracking on and off in under ten seconds.
 - [ ] A 30-minute residential drive records after screen lock.
 - [ ] Switching between navigation and the home-search app does not stop it.
 - [ ] A temporary connectivity loss queues and later delivers points once.
-- [ ] Stop prevents subsequent location delivery.
+- [ ] Turning Continuous tracking off prevents subsequent location delivery.
 - [x] A completed session appears as one session, with no duplicate points (verified on 2026-09-21; the short drive was grouped separately from the earlier stationary test).
 - [ ] Coverage has enough points to distinguish nearby parallel streets.
 - [ ] Battery consumption is acceptable for a two-hour drive.
