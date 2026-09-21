@@ -155,6 +155,10 @@ def test_private_crm_list_is_authenticated_and_does_not_require_provider_data():
     assert 'id="importPreflightForm"' in page
     assert 'planCsvText' in app
     assert (ROOT / "private_app" / "import_preflight.mjs").is_file()
+    assert 'id="importRightsConfirmed"' in page
+    assert 'fetch("/api/v1/import-plans"' in app
+    assert 'advanceImportRun' in app
+    assert 'refreshImportRun()' in app
     assert 'id="propertyList"' in page
     assert 'id="propertyDetail" hidden' in page
     assert 'fetch(`/api/v1/properties/${encodeURIComponent(identity)}`' in app

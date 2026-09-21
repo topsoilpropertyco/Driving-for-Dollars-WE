@@ -101,6 +101,11 @@
         <button class="secondary" type="submit">Check locally</button>
       </form>
       <p class="help" id="importDetail" aria-live="polite">No file has been read.</p>
+      <div class="import-stage" id="importStage" hidden>
+        <label class="consent"><input id="importRightsConfirmed" type="checkbox"> I confirm this source is authorized for this household's private review.</label>
+        <button class="secondary" id="stageImportPlan" type="button">Stage sanitized plan for review</button>
+        <p class="help" id="importStageDetail" aria-live="polite">Only normalized property identities and field names will be saved for review; raw file values stay on this device.</p>
+      </div>
     </section>
 
     <section class="card compact" aria-labelledby="sync-title">
