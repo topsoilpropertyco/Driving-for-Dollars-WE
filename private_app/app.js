@@ -218,12 +218,30 @@ function drawRoute(route, roadLines) {
   }
 }
 
-$("loadRoute").addEventListener("click", async () => {
+let routeSessionsLoaded = false;
+async function loadRouteSessions() {
+  if (routeSessionsLoaded) return;
+  const response = await fetch("/api/v1/recorders/sessions", { cache: "no-store" });
+  if (!response.ok) throw new Error("drive history unavailable");
+  const { sessions } = await response.json();
+  const select = $("routeSession");
+  select.replaceChildren(...sessions.map(session => {
+    const option = document.createElement("option");
+    option.value = session.session_id;
+    option.textContent = `${new Date(session.started_at).toLocaleString()} — ${session.point_count} points`;
+    return option;
+  }));
+  $("routeSelector").hidden = sessions.length < 2;
+  routeSessionsLoaded = true;
+}
+async function loadSelectedRoute() {
   const button = $("loadRoute");
   button.disabled = true;
   button.textContent = "Loading…";
   try {
-    const response = await fetch("/api/v1/recorders/latest-route", { cache: "no-store" });
+    await loadRouteSessions();
+    const session = $("routeSession").value;
+    const response = await fetch(`/api/v1/recorders/latest-route${session ? `?session=${encodeURIComponent(session)}` : ""}`, { cache: "no-store" });
     if (!response.ok) throw new Error("route unavailable");
     const route = await response.json();
     if (route.coordinates.length < 2) {
@@ -238,9 +256,11 @@ $("loadRoute").addEventListener("click", async () => {
     $("routeDetail").textContent = "The private route is unavailable right now. Nothing was shared outside this app.";
   } finally {
     button.disabled = false;
-    button.textContent = "Show latest route";
+    button.textContent = "Show selected route";
   }
-});
+}
+$("loadRoute").addEventListener("click", loadSelectedRoute);
+$("routeSession").addEventListener("change", loadSelectedRoute);
 document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
   const input = $(button.dataset.copy);
   try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }

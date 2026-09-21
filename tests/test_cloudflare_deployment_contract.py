@@ -113,7 +113,9 @@ def test_private_route_map_uses_authenticated_api_and_bundled_street_context():
     app = (ROOT / "private_app" / "app.js").read_text()
     page = (ROOT / "private_app" / "index.html").read_text()
     assert 'url.pathname === "/api/v1/recorders/latest-route"' in worker
+    assert 'url.pathname === "/api/v1/recorders/sessions"' in worker
     assert 'fetch("/api/v1/recorders/latest-route"' in app
+    assert 'fetch("/api/v1/recorders/sessions"' in app
     assert 'id="routeMap"' in page
     assert "No third-party map service receives it." in page
     assert (ROOT / "private_app" / "maps" / "grosse-pointe.geojson").is_file()
