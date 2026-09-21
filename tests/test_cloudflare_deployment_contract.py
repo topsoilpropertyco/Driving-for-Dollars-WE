@@ -79,6 +79,8 @@ def test_private_phone_shell_has_an_iphone_home_screen_manifest_and_cached_icon(
     assert '<svg' in icon
     assert '"/manifest.webmanifest"' in service_worker
     assert '"/icon.svg"' in service_worker
+    assert 'caches.delete(key)' in service_worker
+    assert 'five-pointes-private-shell-v3' in service_worker
 
 
 def test_recorder_ingress_is_separate_from_household_access_and_has_no_read_route():
