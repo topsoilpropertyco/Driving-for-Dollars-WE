@@ -40,9 +40,14 @@ async function bootstrapRecorder(request, env, email) {
   const deviceId = `pilot-${crypto.randomUUID()}`;
   const token = randomToken();
   const createdAt = new Date().toISOString();
-  await env.DB.prepare(
-    "INSERT INTO recorder_devices (device_id, token_hash, created_by_email, created_at) VALUES (?, ?, ?, ?)"
-  ).bind(deviceId, await sha256(token), email, createdAt).run();
+  // A new setup deliberately rotates any earlier setup made by this household
+  // email, so a copied credential does not remain usable after re-provisioning.
+  await env.DB.batch([
+    env.DB.prepare("UPDATE recorder_devices SET revoked_at = ? WHERE created_by_email = ? AND revoked_at IS NULL").bind(createdAt, email),
+    env.DB.prepare(
+      "INSERT INTO recorder_devices (device_id, token_hash, created_by_email, created_at) VALUES (?, ?, ?, ?)"
+    ).bind(deviceId, await sha256(token), email, createdAt),
+  ]);
   return json({
     device_id: deviceId,
     server_url: `${env.RECORDER_INGEST_URL}?token=${encodeURIComponent(token)}`,

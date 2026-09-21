@@ -89,6 +89,7 @@ def test_recorder_ingress_is_separate_from_household_access_and_has_no_read_rout
     assert "recorder_devices" in ingress
     assert 'url.pathname === "/"' in ingress
     assert "return response(404)" in ingress
+    assert "UPDATE recorder_devices SET revoked_at" in (ROOT / "cloudflare" / "worker.js").read_text()
     assert "recorder_points" in migration
     assert "00000000-0000-0000-0000-000000000000" in config
 
@@ -98,6 +99,8 @@ def test_private_phone_shell_only_generates_recorder_setup_after_authenticated_b
     app = (ROOT / "private_app" / "app.js").read_text()
     assert 'id="prepareRecorder"' in page
     assert 'id="recorderConfig" hidden' in page
+    assert 'id="recorderServer" type="password"' in page
+    assert "do not share or screenshot" in page
     assert 'fetch("/api/v1/recorders/bootstrap"' in app
     assert "navigator.clipboard.writeText" in app
     assert 'localStorage.setItem("recorder' not in app

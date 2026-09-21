@@ -59,11 +59,11 @@
       <button class="secondary" id="prepareRecorder" type="button">Prepare recorder</button>
       <div class="recorder-config" id="recorderConfig" hidden>
         <p><strong>1.</strong> Install Traccar Client from the App Store.</p>
-        <p><strong>2.</strong> In its settings, enter these values exactly. They are private to this phone—do not share them.</p>
+        <p><strong>2.</strong> In its settings, enter these values exactly. They are private to this phone—do not share or screenshot them.</p>
         <label for="recorderDevice">Device identifier</label>
-        <div class="copy-row"><input id="recorderDevice" readonly aria-label="Recorder device identifier"><button class="copy" data-copy="recorderDevice" type="button">Copy</button></div>
+        <div class="copy-row"><input id="recorderDevice" readonly autocomplete="off" spellcheck="false" aria-label="Recorder device identifier"><button class="copy" data-copy="recorderDevice" type="button">Copy</button></div>
         <label for="recorderServer">Server URL</label>
-        <div class="copy-row"><input id="recorderServer" readonly aria-label="Recorder server URL"><button class="copy" data-copy="recorderServer" type="button">Copy</button></div>
+        <div class="copy-row"><input id="recorderServer" type="password" readonly autocomplete="off" spellcheck="false" aria-label="Recorder server URL"><button class="copy" data-copy="recorderServer" type="button">Copy</button></div>
         <p class="help">Use iPhone Location permission: <strong>Always</strong>, with Precise Location enabled. We will test Start and Stop before any real drive.</p>
       </div>
     </section>

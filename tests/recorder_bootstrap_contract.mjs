@@ -11,7 +11,10 @@ class FakeBootstrapD1 {
     return { bind: (...args) => ({ run: () => this.run(sql, args) }) };
   }
 
+  async batch(statements) { return Promise.all(statements.map(statement => statement.run())); }
+
   async run(sql, args) {
+    if (sql.includes("UPDATE recorder_devices SET revoked_at")) return { meta: { changes: 0 } };
     if (!sql.includes("INSERT INTO recorder_devices")) throw new Error("unexpected write");
     this.devices.push(args);
     return { meta: { changes: 1 } };
