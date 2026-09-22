@@ -138,7 +138,6 @@ async function saveSelectedPropertyAction(kind, payload, message) {
 }
 let savedProperties = [];
 let visibleProperties = 25;
-let pendingCaptureLocation = null;
 function renderProperties() {
   const query = $("propertySearch").value.trim().toLowerCase();
   const stage = $("propertyStageFilter").value;
@@ -193,15 +192,18 @@ $("captureForm").addEventListener("submit", async event => {
   event.preventDefault();
   const submit = $("captureSubmit");
   if (submit.disabled) return;
-  const identity = $("propertyIdentity").value.trim() || `Tagged home ${new Date().toLocaleString()}`;
+  const identity = $("propertyIdentity").value.trim();
   const note = $("note").value.trim();
+  if (!identity) return toast("Enter the home address before saving its tag.");
   submit.disabled = true;
   submit.textContent = "Saving tag…";
   try {
     const condition = document.querySelector('input[name="condition"]:checked')?.value;
     const tag = { condition, score: Number($("propertyScore").value) };
     if (!condition || !Number.isInteger(tag.score)) throw new Error("invalid tag");
-    if (pendingCaptureLocation) Object.assign(tag, pendingCaptureLocation);
+    const position = await new Promise((resolve, reject) => navigator.geolocation?.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12_000, maximumAge: 15_000 }) || reject(new Error("location unavailable")));
+    tag.latitude = position.coords.latitude;
+    tag.longitude = position.coords.longitude;
     enqueue(action("property_saved", identity, {}));
     enqueue(action("note_added", identity, { note: privateTagNote(tag) }));
     if (note) enqueue(action("note_added", identity, { note }));
@@ -209,35 +211,19 @@ $("captureForm").addEventListener("submit", async event => {
     $("propertyScore").value = "5";
     $("propertyScoreValue").value = "5";
     $("propertyScoreValue").textContent = "5";
-    pendingCaptureLocation = null;
-    $("useCurrentLocation").textContent = "Use my current location for the map star";
-    $("locationStatus").textContent = "Use this while parked or when a passenger is using the phone. Five Pointes saves the star privately; it cannot read a place you selected inside Google Maps.";
+    $("locationStatus").textContent = "When you save, Five Pointes automatically adds a private map star at your current location. Use this only while parked or as a passenger.";
     refreshStatus();
     toast("Tagged house saved. Ready for the next one.");
     await sync();
   } catch {
-    toast("Could not save this house tag yet. It remains safe to try again.");
+    $("locationStatus").textContent = "Five Pointes could not get a current location, so it did not save this tag. Check browser location permission and try again while parked or as a passenger.";
+    toast("Location is needed to save this tagged home.");
   } finally {
     submit.disabled = false;
     submit.textContent = "Save tagged house";
   }
 });
 $("propertyScore").addEventListener("input", () => { $("propertyScoreValue").value = $("propertyScore").value; $("propertyScoreValue").textContent = $("propertyScore").value; });
-$("useCurrentLocation").addEventListener("click", async () => {
-  const button = $("useCurrentLocation");
-  button.disabled = true;
-  button.textContent = "Finding location…";
-  try {
-    const position = await new Promise((resolve, reject) => navigator.geolocation?.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12_000, maximumAge: 15_000 }) || reject(new Error("location unavailable")));
-    pendingCaptureLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude };
-    button.textContent = "Map star location ready ✓";
-    $("locationStatus").textContent = "Current location is ready. Choose condition and score, then save this tagged house.";
-  } catch {
-    pendingCaptureLocation = null;
-    button.textContent = "Use my current location for the map star";
-    $("locationStatus").textContent = "Could not get location. Check browser location permission, then try again while parked or as a passenger.";
-  } finally { button.disabled = false; }
-});
 $("syncNow").addEventListener("click", sync);
 function activateDashboard(view) {
   document.querySelectorAll("[data-dashboard-view]").forEach(item => item.classList.toggle("active", item.dataset.dashboardView === view));
