@@ -531,6 +531,64 @@ let selectedMapCity = "all";
 let selectedRoutePaths = [];
 const mapViewport = { scale: 1, x: 0, y: 0 };
 const activePointers = new Map();
+const parcelCityFiles = {
+  "Grosse Pointe": "grosse-pointe",
+  Farms: "grosse-pointe-farms",
+  Park: "grosse-pointe-park",
+  Shores: "grosse-pointe-shores",
+  Woods: "grosse-pointe-woods",
+};
+const parcelLinesByCity = new Map();
+const parcelLineRequests = new Map();
+
+function parcelWithBounds(rings) {
+  const points = rings.flat();
+  return { rings, west: Math.min(...points.map(point => point[0])), east: Math.max(...points.map(point => point[0])), south: Math.min(...points.map(point => point[1])), north: Math.max(...points.map(point => point[1])) };
+}
+
+async function loadParcelLines(city) {
+  if (parcelLinesByCity.has(city)) return parcelLinesByCity.get(city);
+  if (parcelLineRequests.has(city)) return parcelLineRequests.get(city);
+  const request = fetch(`/maps/parcel-lines-${parcelCityFiles[city]}.json`, { cache: "force-cache" })
+    .then(response => { if (!response.ok) throw new Error("parcel outlines unavailable"); return response.json(); })
+    .then(data => {
+      const parcels = Array.isArray(data.parcels) ? data.parcels.map(parcelWithBounds) : [];
+      parcelLinesByCity.set(city, parcels);
+      return parcels;
+    })
+    .finally(() => parcelLineRequests.delete(city));
+  parcelLineRequests.set(city, request);
+  return request;
+}
+
+function parcelCitiesForView() { return selectedMapCity === "all" ? Object.keys(parcelCityFiles) : [selectedMapCity]; }
+
+function drawParcelLines(context, project, width, height) {
+  if (mapViewport.scale < 6) return;
+  const cities = parcelCitiesForView();
+  const unavailable = cities.filter(city => !parcelLinesByCity.has(city));
+  if (unavailable.length) {
+    void Promise.all(unavailable.map(loadParcelLines)).then(() => drawCoverageMap()).catch(() => {});
+  }
+  const parcels = cities.flatMap(city => parcelLinesByCity.get(city) || []);
+  if (!parcels.length) return;
+  context.save();
+  context.strokeStyle = "#8fa5bb";
+  context.globalAlpha = 0.92;
+  context.lineWidth = 0.8;
+  for (const parcel of parcels) {
+    const [topLeftX, topLeftY] = project([parcel.west, parcel.north]);
+    const [bottomRightX, bottomRightY] = project([parcel.east, parcel.south]);
+    if (Math.max(topLeftX, bottomRightX) < -2 || Math.min(topLeftX, bottomRightX) > width + 2 || Math.max(topLeftY, bottomRightY) < -2 || Math.min(topLeftY, bottomRightY) > height + 2) continue;
+    for (const ring of parcel.rings) {
+      context.beginPath();
+      ring.forEach((point, index) => { const [x, y] = project(point); if (index) context.lineTo(x, y); else context.moveTo(x, y); });
+      context.closePath();
+      context.stroke();
+    }
+  }
+  context.restore();
+}
 
 function coverageMapBounds(roadLines) {
   const points = roadLines.flatMap(road => road.coordinates);
@@ -605,6 +663,7 @@ async function drawCoverageMap() {
     if (!storedCoverageSegments.has(roadSegmentKey(road, index))) continue;
     const [x1, y1] = project(road.coordinates[index - 1]), [x2, y2] = project(road.coordinates[index]); context.beginPath(); context.moveTo(x1, y1); context.lineTo(x2, y2); context.stroke();
   }
+  drawParcelLines(context, project, width, height);
   drawStreetLabels(context, visibleRoads, project, width, height);
   if (selectedRoutePaths.length) {
     context.strokeStyle = "#2d6df6"; context.lineWidth = 3; context.lineJoin = "round";
