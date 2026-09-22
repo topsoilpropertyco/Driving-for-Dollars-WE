@@ -241,6 +241,7 @@ function renderPipeline() {
   $("pipelineConversation").textContent = String(savedProperties.filter(property => property.stage === "in_conversation").length);
   $("pipelineOffer").textContent = String(savedProperties.filter(property => property.stage === "contractor_offer").length);
   $("pipelineClosed").textContent = String(savedProperties.filter(property => property.stage === "closed").length);
+  void renderHomesDrivenPast();
 }
 async function refreshProperties() {
   const button = $("refreshProperties");
@@ -514,6 +515,7 @@ async function refreshCoverageHistory() {
     const activeEntries = campaignStartedAt ? entries.filter(entry => Date.parse(entry.last_seen_at) >= Date.parse(campaignStartedAt)) : entries;
     storedCoverageSegments = new Set(activeEntries.map(entry => entry.segment_id));
     renderStoredCoverageStats(storedCoverageSegments, streetLines);
+    void renderHomesDrivenPast();
     $("freshCoverageCard").hidden = Boolean(campaignStartedAt);
     if (campaignStartedAt) $("freshCoverageDetail").textContent = "Fresh coverage is active. Earlier private data is retained, not deleted.";
     drawCoverageMap();
@@ -543,10 +545,63 @@ const parcelCityFiles = {
 };
 const parcelLinesByCity = new Map();
 const parcelLineRequests = new Map();
+let homesDrivenPastRequest = null;
 
 function parcelWithBounds(rings) {
   const points = rings.flat();
   return { rings, west: Math.min(...points.map(point => point[0])), east: Math.max(...points.map(point => point[0])), south: Math.min(...points.map(point => point[1])), north: Math.max(...points.map(point => point[1])) };
+}
+
+function pointMeters(point) { return [point[0] * 81_950, point[1] * 111_130]; }
+function squaredDistanceToSegment(point, first, second) {
+  const deltaX = second[0] - first[0], deltaY = second[1] - first[1];
+  const lengthSquared = deltaX * deltaX + deltaY * deltaY;
+  const fraction = lengthSquared ? Math.max(0, Math.min(1, ((point[0] - first[0]) * deltaX + (point[1] - first[1]) * deltaY) / lengthSquared)) : 0;
+  const closestX = first[0] + fraction * deltaX, closestY = first[1] + fraction * deltaY;
+  return (point[0] - closestX) ** 2 + (point[1] - closestY) ** 2;
+}
+function approximateHomesFromCoveredRoads(streetLines, segmentIds, parcels) {
+  if (!segmentIds.size) return 0;
+  const cellSize = 100, bufferMeters = 40, cells = new Map();
+  for (const road of streetLines) for (let index = 1; index < road.coordinates.length; index += 1) {
+    if (!segmentIds.has(roadSegmentKey(road, index))) continue;
+    const first = pointMeters(road.coordinates[index - 1]), second = pointMeters(road.coordinates[index]);
+    const minX = Math.floor((Math.min(first[0], second[0]) - bufferMeters) / cellSize), maxX = Math.floor((Math.max(first[0], second[0]) + bufferMeters) / cellSize);
+    const minY = Math.floor((Math.min(first[1], second[1]) - bufferMeters) / cellSize), maxY = Math.floor((Math.max(first[1], second[1]) + bufferMeters) / cellSize);
+    for (let x = minX; x <= maxX; x += 1) for (let y = minY; y <= maxY; y += 1) {
+      const key = `${x}:${y}`;
+      if (!cells.has(key)) cells.set(key, []);
+      cells.get(key).push([first, second]);
+    }
+  }
+  let passed = 0;
+  for (const parcel of parcels) {
+    const point = pointMeters([(parcel.west + parcel.east) / 2, (parcel.south + parcel.north) / 2]);
+    const key = `${Math.floor(point[0] / cellSize)}:${Math.floor(point[1] / cellSize)}`;
+    if ((cells.get(key) || []).some(([first, second]) => squaredDistanceToSegment(point, first, second) <= bufferMeters ** 2)) passed += 1;
+  }
+  return passed;
+}
+async function renderHomesDrivenPast() {
+  if (homesDrivenPastRequest) return homesDrivenPastRequest;
+  homesDrivenPastRequest = (async () => {
+    try {
+      const streetLines = await roads();
+      if (!storedCoverageSegments.size) {
+        $("pipelineDrivenPast").textContent = "0";
+        $("pipelineDrivenPastDetail").textContent = "No active Five Pointes street coverage has been recorded yet.";
+        return;
+      }
+      const parcelGroups = await Promise.all(Object.keys(parcelCityFiles).map(loadParcelLines));
+      const count = approximateHomesFromCoveredRoads(streetLines, storedCoverageSegments, parcelGroups.flat());
+      $("pipelineDrivenPast").textContent = String(count);
+      $("pipelineDrivenPastDetail").textContent = "Approximation from public lot outlines within 40 m of active covered streets. It is a helpful driving funnel, not a residential parcel census.";
+    } catch {
+      $("pipelineDrivenPast").textContent = "—";
+      $("pipelineDrivenPastDetail").textContent = "The approximate driving reference is unavailable right now. Your saved-home counts are unchanged.";
+    }
+  })();
+  try { return await homesDrivenPastRequest; } finally { homesDrivenPastRequest = null; }
 }
 
 async function loadParcelLines(city) {

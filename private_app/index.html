@@ -204,14 +204,16 @@
 
     <section class="card compact dashboard-panel" data-dashboard-panel="pipeline" aria-labelledby="pipeline-title">
       <div class="card-heading"><div><p class="eyebrow">Household pipeline</p><h2 id="pipeline-title">From saved home to closed</h2></div></div>
-      <p class="help">These are real household workflow counts, based only on homes you have actually tagged. A building-map reference is not used until it is verified as residential parcel data.</p>
+      <p class="help">Follow the funnel from homes you drove past to the homes you saved and contacted. The first number is an approximate public-map reference; every later stage is an exact count from your private saved homes.</p>
       <div class="pipeline-list">
+        <div><span>Homes driven past <small>(approx.)</small></span><strong id="pipelineDrivenPast">—</strong></div>
         <div><span>Saved</span><strong id="pipelineSaved">0</strong></div>
         <div><span>Outreach started</span><strong id="pipelineReached">0</strong></div>
         <div><span>In conversation</span><strong id="pipelineConversation">0</strong></div>
         <div><span>Contractor offer</span><strong id="pipelineOffer">0</strong></div>
         <div><span>Closed</span><strong id="pipelineClosed">0</strong></div>
       </div>
+      <p class="help" id="pipelineDrivenPastDetail">Loading the private driving reference…</p>
     </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
