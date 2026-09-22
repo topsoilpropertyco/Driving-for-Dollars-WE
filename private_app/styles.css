@@ -286,6 +286,9 @@ textarea:focus-visible {
 .map-city-picker { display: flex; gap: 7px; overflow-x: auto; margin: 0 -2px 14px; padding: 2px; scrollbar-width: none; }
 .map-city-picker button { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; padding: 8px 11px; background: #fff; color: var(--muted); font: inherit; font-size: 12px; font-weight: 800; }
 .map-city-picker button.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+.map-controls { display: flex; gap: 8px; justify-content: flex-end; margin: -5px 0 2px; }
+.map-controls .secondary { min-height: 36px; padding: 7px 12px; font-size: 14px; }
+.map-controls #zoomMapIn, .map-controls #zoomMapOut { min-width: 40px; font-size: 21px; line-height: 1; }
 .map-legend { display: flex; flex-wrap: wrap; gap: 11px; margin: 0 0 16px; color: var(--muted); font-size: 12px; font-weight: 700; }
 .map-legend span::before { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 50%; content: ""; }
 .map-legend .covered::before { background: #16a56b; box-shadow: 0 0 7px #16a56b; }

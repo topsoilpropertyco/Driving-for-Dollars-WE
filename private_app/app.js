@@ -535,18 +535,20 @@ function drawStreetLabels(context, roadLines, project, width, height) {
   if (mapViewport.scale < 1.35) return;
   const candidates = new Map(), placed = [];
   const centerX = width / 2, centerY = height / 2;
+  context.save();
+  context.font = "700 12px system-ui, -apple-system, sans-serif";
   for (const road of roadLines) {
     if (!road.name || road.name === "Unnamed street") continue;
+    const labelWidth = context.measureText(road.name).width + 18;
     for (let index = 1; index < road.coordinates.length; index += 1) {
       const [x1, y1] = project(road.coordinates[index - 1]), [x2, y2] = project(road.coordinates[index]);
       const x = (x1 + x2) / 2, y = (y1 + y2) / 2;
-      if (x < 28 || x > width - 28 || y < 12 || y > height - 12 || Math.hypot(x2 - x1, y2 - y1) < 20) continue;
+      const length = Math.hypot(x2 - x1, y2 - y1);
+      if (x < 28 || x > width - 28 || y < 12 || y > height - 12 || length < labelWidth) continue;
       const distance = Math.hypot(x - centerX, y - centerY), existing = candidates.get(road.name);
-      if (!existing || distance < existing.distance) candidates.set(road.name, { x, y, x1, y1, x2, y2, distance, name: road.name });
+      if (!existing || distance / length < existing.distance / existing.length) candidates.set(road.name, { x, y, x1, y1, x2, y2, distance, length, name: road.name });
     }
   }
-  context.save();
-  context.font = "700 12px system-ui, -apple-system, sans-serif";
   context.textAlign = "center";
   context.textBaseline = "middle";
   for (const label of [...candidates.values()].sort((first, second) => first.distance - second.distance)) {
@@ -776,13 +778,23 @@ const mapCanvas = $("routeMap");
 function mapPointer(event) { const rect = mapCanvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
 function zoomMapAt(x, y, factor) {
   const width = mapCanvas.clientWidth || 600, height = width * 0.6;
-  const nextScale = Math.min(128, Math.max(1, mapViewport.scale * factor));
+  const nextScale = Math.min(2048, Math.max(1, mapViewport.scale * factor));
   const actualFactor = nextScale / mapViewport.scale;
   mapViewport.x = x - width / 2 - (x - width / 2 - mapViewport.x) * actualFactor;
   mapViewport.y = y - height / 2 - (y - height / 2 - mapViewport.y) * actualFactor;
   mapViewport.scale = nextScale;
 }
-mapCanvas.addEventListener("pointerdown", event => { activePointers.set(event.pointerId, mapPointer(event)); mapCanvas.setPointerCapture(event.pointerId); });
+let lastMapTap = null;
+mapCanvas.addEventListener("pointerdown", event => {
+  const point = mapPointer(event);
+  if (event.pointerType === "touch" && lastMapTap && event.timeStamp - lastMapTap.time < 320 && Math.hypot(point.x - lastMapTap.x, point.y - lastMapTap.y) < 28) {
+    zoomMapAt(point.x, point.y, 2.5);
+    lastMapTap = null;
+    drawCoverageMap();
+  } else if (event.pointerType === "touch") lastMapTap = { ...point, time: event.timeStamp };
+  activePointers.set(event.pointerId, point);
+  mapCanvas.setPointerCapture(event.pointerId);
+});
 mapCanvas.addEventListener("pointermove", event => {
   if (!activePointers.has(event.pointerId)) return;
   const next = mapPointer(event), previous = activePointers.get(event.pointerId), before = [...activePointers.entries()]; activePointers.set(event.pointerId, next);
@@ -796,6 +808,9 @@ mapCanvas.addEventListener("pointermove", event => {
 });
 ["pointerup", "pointercancel"].forEach(name => mapCanvas.addEventListener(name, event => activePointers.delete(event.pointerId)));
 mapCanvas.addEventListener("wheel", event => { event.preventDefault(); const point = mapPointer(event); zoomMapAt(point.x, point.y, event.deltaY < 0 ? 1.2 : 1 / 1.2); drawCoverageMap(); }, { passive: false });
+$("zoomMapIn").addEventListener("click", () => { zoomMapAt(mapCanvas.clientWidth / 2, (mapCanvas.clientWidth || 600) * 0.3, 2); drawCoverageMap(); });
+$("zoomMapOut").addEventListener("click", () => { zoomMapAt(mapCanvas.clientWidth / 2, (mapCanvas.clientWidth || 600) * 0.3, 0.5); drawCoverageMap(); });
+$("resetMapView").addEventListener("click", () => { mapViewport.scale = 1; mapViewport.x = 0; mapViewport.y = 0; drawCoverageMap(); });
 document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
   const input = $(button.dataset.copy);
   try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }
