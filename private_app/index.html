@@ -60,16 +60,16 @@
         <input id="propertyIdentity" name="propertyIdentity" autocomplete="off" inputmode="text" placeholder="e.g., blue shutters on corner" maxlength="256">
         <p class="help">Leave this blank and Five Pointes creates a private label. Do not enter an owner name, phone number, or email.</p>
 
-        <fieldset class="condition-picker"><legend>Condition</legend>
-          <label><input type="radio" name="condition" value="pristine" checked> Pristine</label>
-          <label><input type="radio" name="condition" value="average"> Average</label>
-          <label><input type="radio" name="condition" value="needs_work"> Needs work</label>
-          <label><input type="radio" name="condition" value="abandoned"> Abandoned</label>
+        <fieldset class="condition-picker"><legend>House condition</legend>
+          <label><input type="radio" name="condition" value="pristine" checked><span aria-hidden="true">✨</span> Pristine</label>
+          <label><input type="radio" name="condition" value="average"><span aria-hidden="true">🙂</span> Average</label>
+          <label><input type="radio" name="condition" value="needs_work"><span aria-hidden="true">🔧</span> Needs work</label>
+          <label><input type="radio" name="condition" value="abandoned"><span aria-hidden="true">🏚️</span> Abandoned</label>
         </fieldset>
-        <label for="propertyScore">House score <output id="propertyScoreValue" for="propertyScore">5</output> / 10</label>
+        <label for="propertyScore">House-condition score <output id="propertyScoreValue" for="propertyScore">5</output> / 10 <span>(higher means a higher-quality home)</span></label>
         <input id="propertyScore" name="propertyScore" type="range" min="1" max="10" value="5" step="1">
-        <label class="location-choice"><input id="captureLocation" name="captureLocation" type="checkbox"> Add a private map star at my current location</label>
-        <p class="help">Only choose this while parked or when a passenger is using the phone. The location stays in this protected household app.</p>
+        <button class="secondary location-button" id="useCurrentLocation" type="button">Use my current location for the map star</button>
+        <p class="help" id="locationStatus">Use this while parked or when a passenger is using the phone. Five Pointes saves the star privately; it cannot read a place you selected inside Google Maps.</p>
 
         <label for="note">Quick note <span>optional</span></label>
         <textarea id="note" name="note" maxlength="1000" placeholder="What stood out about the house or block?"></textarea>

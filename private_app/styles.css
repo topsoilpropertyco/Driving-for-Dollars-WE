@@ -299,6 +299,7 @@ textarea:focus-visible {
 .condition-picker label { display: flex; align-items: center; gap: 6px; margin: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 12px; }
 .condition-picker input, .location-choice input { display: inline-block; width: auto; margin: 0; padding: 0; }
 .location-choice { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
+.location-button { margin-top: 16px; }
 #propertyScore { padding: 0; accent-color: var(--blue); }
 #propertyScoreValue { color: var(--blue); font-weight: 800; }
 .coverage-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }

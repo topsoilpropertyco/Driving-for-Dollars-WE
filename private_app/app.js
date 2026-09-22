@@ -138,6 +138,7 @@ async function saveSelectedPropertyAction(kind, payload, message) {
 }
 let savedProperties = [];
 let visibleProperties = 25;
+let pendingCaptureLocation = null;
 function renderProperties() {
   const query = $("propertySearch").value.trim().toLowerCase();
   const stage = $("propertyStageFilter").value;
@@ -200,11 +201,7 @@ $("captureForm").addEventListener("submit", async event => {
     const condition = document.querySelector('input[name="condition"]:checked')?.value;
     const tag = { condition, score: Number($("propertyScore").value) };
     if (!condition || !Number.isInteger(tag.score)) throw new Error("invalid tag");
-    if ($("captureLocation").checked) {
-      const position = await new Promise((resolve, reject) => navigator.geolocation?.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12_000, maximumAge: 30_000 }) || reject(new Error("location unavailable")));
-      tag.latitude = position.coords.latitude;
-      tag.longitude = position.coords.longitude;
-    }
+    if (pendingCaptureLocation) Object.assign(tag, pendingCaptureLocation);
     enqueue(action("property_saved", identity, {}));
     enqueue(action("note_added", identity, { note: privateTagNote(tag) }));
     if (note) enqueue(action("note_added", identity, { note }));
@@ -212,17 +209,35 @@ $("captureForm").addEventListener("submit", async event => {
     $("propertyScore").value = "5";
     $("propertyScoreValue").value = "5";
     $("propertyScoreValue").textContent = "5";
+    pendingCaptureLocation = null;
+    $("useCurrentLocation").textContent = "Use my current location for the map star";
+    $("locationStatus").textContent = "Use this while parked or when a passenger is using the phone. Five Pointes saves the star privately; it cannot read a place you selected inside Google Maps.";
     refreshStatus();
     toast("Tagged house saved. Ready for the next one.");
     await sync();
   } catch {
-    toast($("captureLocation").checked ? "Could not get this location. Check permission, then try while parked." : "Could not save this house tag yet.");
+    toast("Could not save this house tag yet. It remains safe to try again.");
   } finally {
     submit.disabled = false;
     submit.textContent = "Save tagged house";
   }
 });
 $("propertyScore").addEventListener("input", () => { $("propertyScoreValue").value = $("propertyScore").value; $("propertyScoreValue").textContent = $("propertyScore").value; });
+$("useCurrentLocation").addEventListener("click", async () => {
+  const button = $("useCurrentLocation");
+  button.disabled = true;
+  button.textContent = "Finding location…";
+  try {
+    const position = await new Promise((resolve, reject) => navigator.geolocation?.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12_000, maximumAge: 15_000 }) || reject(new Error("location unavailable")));
+    pendingCaptureLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+    button.textContent = "Map star location ready ✓";
+    $("locationStatus").textContent = "Current location is ready. Choose condition and score, then save this tagged house.";
+  } catch {
+    pendingCaptureLocation = null;
+    button.textContent = "Use my current location for the map star";
+    $("locationStatus").textContent = "Could not get location. Check browser location permission, then try again while parked or as a passenger.";
+  } finally { button.disabled = false; }
+});
 $("syncNow").addEventListener("click", sync);
 function activateDashboard(view) {
   document.querySelectorAll("[data-dashboard-view]").forEach(item => item.classList.toggle("active", item.dataset.dashboardView === view));
