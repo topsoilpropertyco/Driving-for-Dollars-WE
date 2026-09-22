@@ -109,21 +109,27 @@ function tagFromTimeline(item) {
 function timelineLabel(item) {
   if (item.kind === "property_saved") return "Saved";
   const tag = tagFromTimeline(item);
-  if (tag) return `${conditionNames[tag.condition] || "Tagged"} · ${tag.score}/10${Number.isFinite(tag.latitude) ? " · map star" : ""}`;
-  if (item.kind === "property_tagged") return `${conditionNames[item.payload.condition] || "Tagged"} · ${item.payload.score}/10${Number.isFinite(item.payload.latitude) ? " · map star" : ""}`;
+  if (tag) return `${savedScoreSummary(tag)}${Number.isFinite(tag.latitude) ? " · map star" : ""}`;
+  if (item.kind === "property_tagged") return `${savedScoreSummary(item.payload)}${Number.isFinite(item.payload.latitude) ? " · map star" : ""}`;
   if (item.kind === "stage_changed") return `Stage: ${stageNames[item.payload.stage] || "Updated"}`;
   if (item.kind === "note_added") return `Note: ${item.payload.note}`;
   if (item.kind === "outreach_logged") return `Outreach: ${item.payload.method}`;
   return "Updated";
 }
 const conditionNames = { pristine: "Pristine", average: "Average", needs_work: "Needs work", abandoned: "Abandoned" };
+function savedScoreSummary(tag) {
+  const scores = [`${conditionNames[tag.condition] || "House condition"} · ${tag.score}/10`];
+  if (Number.isInteger(tag.home_excitement_score)) scores.push(`Home excitement ${tag.home_excitement_score}/10`);
+  if (Number.isInteger(tag.neighborhood_excitement_score)) scores.push(`Neighborhood excitement ${tag.neighborhood_excitement_score}/10`);
+  return scores.join(" · ");
+}
 async function showProperty(identity) {
   try {
     const response = await fetch(`/api/v1/properties/${encodeURIComponent(identity)}`, { cache: "no-store" });
     if (!response.ok) throw new Error("property unavailable");
     const property = await response.json();
     $("selectedProperty").textContent = property.summary.property_identity;
-    const tag = property.summary.condition ? `${conditionNames[property.summary.condition]} · ${property.summary.score}/10` : "Not yet rated";
+    const tag = property.summary.condition ? savedScoreSummary(property.summary) : "Not yet rated";
     $("selectedPropertySummary").textContent = `${tag} · ${stageNames[property.summary.stage] || "Saved"} · ${property.summary.action_count} saved action${property.summary.action_count === 1 ? "" : "s"}`;
     $("selectedPropertyStage").value = property.summary.stage || "no_outreach";
     $("selectedPropertyTimeline").replaceChildren(...property.timeline.map(item => {
@@ -218,7 +224,7 @@ function renderProperties() {
     const identity = document.createElement("strong");
     identity.textContent = property.property_identity;
     const detail = document.createElement("span");
-    detail.textContent = `${property.condition ? `${conditionNames[property.condition]} · ${property.score}/10` : "Not yet rated"} · ${stageNames[property.stage] || "Saved"}`;
+    detail.textContent = `${property.condition ? savedScoreSummary(property) : "Not yet rated"} · ${stageNames[property.stage] || "Saved"}`;
     item.append(identity, detail);
     item.addEventListener("click", () => showProperty(property.property_identity));
     return item;
@@ -265,8 +271,13 @@ $("captureForm").addEventListener("submit", async event => {
   submit.textContent = "Saving tag…";
   try {
     const condition = document.querySelector('input[name="condition"]:checked')?.value;
-    const tag = { condition, score: Number($("propertyScore").value) };
-    if (!condition || !Number.isInteger(tag.score)) throw new Error("invalid tag");
+    const tag = {
+      condition,
+      score: Number($("propertyScore").value),
+      home_excitement_score: Number($("homeExcitementScore").value),
+      neighborhood_excitement_score: Number($("neighborhoodExcitementScore").value),
+    };
+    if (!condition || ![tag.score, tag.home_excitement_score, tag.neighborhood_excitement_score].every(score => Number.isInteger(score) && score >= 1 && score <= 10)) throw new Error("invalid tag");
     if (selectedAddress && selectedAddress.address === identity) {
       tag.latitude = selectedAddress.latitude;
       tag.longitude = selectedAddress.longitude;
@@ -282,9 +293,7 @@ $("captureForm").addEventListener("submit", async event => {
     selectedAddress = null;
     addressSession = crypto.randomUUID();
     hideAddressSuggestions();
-    $("propertyScore").value = "5";
-    $("propertyScoreValue").value = "5";
-    $("propertyScoreValue").textContent = "5";
+    resetScoreControls();
     $("locationStatus").textContent = "Choose an address suggestion for an exact address star, or Five Pointes uses your current location when you save. Use this only while parked or as a passenger.";
     refreshStatus();
     toast("Tagged house saved. Ready for the next one.");
@@ -297,7 +306,15 @@ $("captureForm").addEventListener("submit", async event => {
     submit.textContent = "Save this house";
   }
 });
-$("propertyScore").addEventListener("input", () => { $("propertyScoreValue").value = $("propertyScore").value; $("propertyScoreValue").textContent = $("propertyScore").value; });
+const scoreControls = [
+  ["propertyScore", "propertyScoreValue"],
+  ["homeExcitementScore", "homeExcitementScoreValue"],
+  ["neighborhoodExcitementScore", "neighborhoodExcitementScoreValue"],
+];
+function resetScoreControls() {
+  scoreControls.forEach(([inputId, outputId]) => { $(inputId).value = "5"; $(outputId).value = "5"; $(outputId).textContent = "5"; });
+}
+scoreControls.forEach(([inputId, outputId]) => $(inputId).addEventListener("input", () => { $(outputId).value = $(inputId).value; $(outputId).textContent = $(inputId).value; }));
 $("syncNow").addEventListener("click", sync);
 $("startFreshCoverage").addEventListener("click", async () => {
   const button = $("startFreshCoverage");

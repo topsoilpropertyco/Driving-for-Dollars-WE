@@ -70,8 +70,18 @@
           <label><input type="radio" name="condition" value="needs_work"><span aria-hidden="true">🔧</span> Needs work</label>
           <label><input type="radio" name="condition" value="abandoned"><span aria-hidden="true">🏚️</span> Abandoned</label>
         </fieldset>
-        <label for="propertyScore">House-condition score <output id="propertyScoreValue" for="propertyScore">5</output> / 10 <span>(higher means a higher-quality home)</span></label>
-        <input id="propertyScore" name="propertyScore" type="range" min="1" max="10" value="5" step="1">
+        <div class="score-control score-condition">
+          <label for="propertyScore"><span class="score-title">🏠 House condition score <output id="propertyScoreValue" for="propertyScore">5</output> / 10</span><span class="score-help">(higher score = higher-quality home)</span></label>
+          <input id="propertyScore" name="propertyScore" type="range" min="1" max="10" value="5" step="1">
+        </div>
+        <div class="score-control score-home-excitement">
+          <label for="homeExcitementScore"><span class="score-title">✨ Excitement for home score <output id="homeExcitementScoreValue" for="homeExcitementScore">5</output> / 10</span></label>
+          <input id="homeExcitementScore" name="homeExcitementScore" type="range" min="1" max="10" value="5" step="1">
+        </div>
+        <div class="score-control score-neighborhood-excitement">
+          <label for="neighborhoodExcitementScore"><span class="score-title">🏘️ Excitement for neighborhood score <output id="neighborhoodExcitementScoreValue" for="neighborhoodExcitementScore">5</output> / 10</span></label>
+          <input id="neighborhoodExcitementScore" name="neighborhoodExcitementScore" type="range" min="1" max="10" value="5" step="1">
+        </div>
         <label for="privateLabel">Private Label</label>
         <input id="privateLabel" aria-label="Private Label" disabled placeholder="Leave this blank">
         <p class="help" id="locationStatus">Choose an address suggestion for an exact address star, or Five Pointes uses your current location when you save. Use this only while parked or as a passenger.</p>

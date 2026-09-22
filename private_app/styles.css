@@ -321,8 +321,18 @@ textarea:focus-visible {
 .address-suggestions button { display: block; width: 100%; border: 0; border-bottom: 1px solid var(--line); padding: 12px 13px; background: #fff; color: var(--ink); font: inherit; font-size: 14px; text-align: left; }
 .address-suggestions button:last-child { border-bottom: 0; }
 .address-suggestions button:active,.address-suggestions button:focus-visible { background: #edf3ff; outline: none; }
-#propertyScore { padding: 0; accent-color: var(--blue); }
-#propertyScoreValue { color: var(--blue); font-weight: 800; }
+.score-control { margin-top: 18px; }
+.score-control label { display: grid; gap: 1px; }
+.score-control .score-title { color: var(--ink); font-weight: 800; }
+.score-control .score-help { color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; }
+.score-control output { font-weight: 800; }
+.score-control input[type="range"] { padding: 0; }
+#propertyScore { accent-color: #2d6df6; }
+#propertyScoreValue { color: #2d6df6; }
+#homeExcitementScore { accent-color: #1877c9; }
+#homeExcitementScoreValue { color: #1877c9; }
+#neighborhoodExcitementScore { accent-color: #405bc4; }
+#neighborhoodExcitementScoreValue { color: #405bc4; }
 .coverage-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }
 .coverage-stats div { padding: 10px; border-radius: 12px; background: #f5f8fe; }
 .coverage-stats strong,.coverage-stats span { display: block; }

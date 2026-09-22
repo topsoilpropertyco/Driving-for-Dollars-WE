@@ -9,13 +9,23 @@ const STAGES = new Set([
 const KINDS = new Set(["property_saved", "note_added", "stage_changed", "outreach_logged", "property_tagged"]);
 const CONDITIONS = new Set(["pristine", "average", "needs_work", "abandoned"]);
 const TAG_PREFIX = "five_pointes_private_tag:";
+const OPTIONAL_TAG_SCORES = ["home_excitement_score", "neighborhood_excitement_score"];
+
+function validTagScores(value) {
+  if (!value || !CONDITIONS.has(value.condition) || !Number.isInteger(value.score) || value.score < 1 || value.score > 10) return false;
+  return OPTIONAL_TAG_SCORES.every(field => !(field in value) || (Number.isInteger(value[field]) && value[field] >= 1 && value[field] <= 10));
+}
+
+function validTagLocation(value) {
+  const hasLatitude = "latitude" in value, hasLongitude = "longitude" in value;
+  return (!hasLatitude && !hasLongitude) || (hasLatitude && hasLongitude && Number.isFinite(value.latitude) && Number.isFinite(value.longitude) && value.latitude >= -90 && value.latitude <= 90 && value.longitude >= -180 && value.longitude <= 180);
+}
 
 function privateTag(payload) {
   if (!payload || typeof payload.note !== "string" || !payload.note.startsWith(TAG_PREFIX)) return null;
   try {
     const value = JSON.parse(payload.note.slice(TAG_PREFIX.length));
-    if (!value || !CONDITIONS.has(value.condition) || !Number.isInteger(value.score) || value.score < 1 || value.score > 10) return null;
-    if (("latitude" in value || "longitude" in value) && (!Number.isFinite(value.latitude) || !Number.isFinite(value.longitude) || value.latitude < -90 || value.latitude > 90 || value.longitude < -180 || value.longitude > 180)) return null;
+    if (!validTagScores(value) || !validTagLocation(value) || !Object.keys(value).every(field => ["condition", "score", "latitude", "longitude", ...OPTIONAL_TAG_SCORES].includes(field))) return null;
     return value;
   } catch { return null; }
 }
@@ -236,13 +246,7 @@ function validateAction(value) {
   if (value.kind === "property_saved") return Object.keys(value.payload).length === 0;
   if (value.kind === "stage_changed") return Object.keys(value.payload).length === 1 && STAGES.has(value.payload.stage);
   if (value.kind === "note_added") return Object.keys(value.payload).length === 1 && typeof value.payload.note === "string" && value.payload.note.trim();
-  if (value.kind === "property_tagged") {
-    const fields = Object.keys(value.payload).sort();
-    const locationFields = fields.join(",") === "condition,latitude,longitude,score";
-    const tagFields = fields.join(",") === "condition,score";
-    return (tagFields || locationFields) && CONDITIONS.has(value.payload.condition) && Number.isInteger(value.payload.score) && value.payload.score >= 1 && value.payload.score <= 10
-      && (!locationFields || (Number.isFinite(value.payload.latitude) && Number.isFinite(value.payload.longitude) && value.payload.latitude >= -90 && value.payload.latitude <= 90 && value.payload.longitude >= -180 && value.payload.longitude <= 180));
-  }
+  if (value.kind === "property_tagged") return validTagScores(value.payload) && validTagLocation(value.payload) && Object.keys(value.payload).every(field => ["condition", "score", "latitude", "longitude", ...OPTIONAL_TAG_SCORES].includes(field));
   return Object.keys(value.payload).length === 1 && typeof value.payload.method === "string" && value.payload.method.trim();
 }
 
@@ -354,7 +358,7 @@ async function property(identity, env) {
   ).bind(identity).all();
   let stage = "no_outreach";
   const notes = [], outreach_methods = [], timeline = [];
-  let condition = null, score = null, location = null;
+  let condition = null, score = null, location = null, home_excitement_score = null, neighborhood_excitement_score = null;
   for (const row of rows.results) {
     const payload = JSON.parse(row.payload_json);
     if (row.kind === "stage_changed") stage = payload.stage;
@@ -364,16 +368,23 @@ async function property(identity, env) {
     if (row.kind === "property_tagged") {
       condition = payload.condition;
       score = payload.score;
+      home_excitement_score = Number.isInteger(payload.home_excitement_score) ? payload.home_excitement_score : home_excitement_score;
+      neighborhood_excitement_score = Number.isInteger(payload.neighborhood_excitement_score) ? payload.neighborhood_excitement_score : neighborhood_excitement_score;
       location = Number.isFinite(payload.latitude) && Number.isFinite(payload.longitude) ? [payload.longitude, payload.latitude] : location;
     }
     if (tag) {
       condition = tag.condition;
       score = tag.score;
+      home_excitement_score = Number.isInteger(tag.home_excitement_score) ? tag.home_excitement_score : home_excitement_score;
+      neighborhood_excitement_score = Number.isInteger(tag.neighborhood_excitement_score) ? tag.neighborhood_excitement_score : neighborhood_excitement_score;
       location = Number.isFinite(tag.latitude) && Number.isFinite(tag.longitude) ? [tag.longitude, tag.latitude] : location;
     }
     timeline.push({ event_id: row.event_id, occurred_at: row.occurred_at, kind: row.kind, payload });
   }
-  return json({ summary: { property_identity: identity, saved: timeline.some(item => item.kind === "property_saved"), stage, notes, outreach_methods, condition, score, location, action_count: timeline.length }, timeline });
+  const summary = { property_identity: identity, saved: timeline.some(item => item.kind === "property_saved"), stage, notes, outreach_methods, condition, score, location, action_count: timeline.length };
+  if (home_excitement_score !== null) summary.home_excitement_score = home_excitement_score;
+  if (neighborhood_excitement_score !== null) summary.neighborhood_excitement_score = neighborhood_excitement_score;
+  return json({ summary, timeline });
 }
 
 async function properties(env) {
@@ -394,11 +405,15 @@ async function properties(env) {
     if (row.kind === "property_tagged") {
       current.condition = payload.condition;
       current.score = payload.score;
+      if (Number.isInteger(payload.home_excitement_score)) current.home_excitement_score = payload.home_excitement_score;
+      if (Number.isInteger(payload.neighborhood_excitement_score)) current.neighborhood_excitement_score = payload.neighborhood_excitement_score;
       if (Number.isFinite(payload.latitude) && Number.isFinite(payload.longitude)) current.location = [payload.longitude, payload.latitude];
     }
     if (tag) {
       current.condition = tag.condition;
       current.score = tag.score;
+      if (Number.isInteger(tag.home_excitement_score)) current.home_excitement_score = tag.home_excitement_score;
+      if (Number.isInteger(tag.neighborhood_excitement_score)) current.neighborhood_excitement_score = tag.neighborhood_excitement_score;
       if (Number.isFinite(tag.latitude) && Number.isFinite(tag.longitude)) current.location = [tag.longitude, tag.latitude];
     }
     summaries.set(row.property_identity, current);
