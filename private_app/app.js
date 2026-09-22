@@ -125,6 +125,29 @@ async function saveSelectedPropertyAction(kind, payload, message) {
   await showProperty(identity);
   toast(message);
 }
+let savedProperties = [];
+let visibleProperties = 25;
+function renderProperties() {
+  const query = $("propertySearch").value.trim().toLowerCase();
+  const stage = $("propertyStageFilter").value;
+  const matches = savedProperties.filter(property => (!query || property.property_identity.toLowerCase().includes(query)) && (!stage || property.stage === stage));
+  const displayed = matches.slice(0, visibleProperties);
+  $("propertyResults").textContent = matches.length ? `Showing ${displayed.length} of ${matches.length} matching saved home${matches.length === 1 ? "" : "s"}.` : "No saved homes match this search.";
+  const list = $("propertyList");
+  list.replaceChildren(...displayed.map(property => {
+    const item = document.createElement("button");
+    item.className = "property-row";
+    item.type = "button";
+    const identity = document.createElement("strong");
+    identity.textContent = property.property_identity;
+    const detail = document.createElement("span");
+    detail.textContent = `${stageNames[property.stage] || "Saved"} · ${property.action_count} action${property.action_count === 1 ? "" : "s"}`;
+    item.append(identity, detail);
+    item.addEventListener("click", () => showProperty(property.property_identity));
+    return item;
+  }));
+  $("moreProperties").hidden = displayed.length >= matches.length;
+}
 async function refreshProperties() {
   const button = $("refreshProperties");
   button.disabled = true;
@@ -132,22 +155,12 @@ async function refreshProperties() {
     const response = await fetch("/api/v1/properties", { cache: "no-store" });
     if (!response.ok) throw new Error("properties unavailable");
     const { properties } = await response.json();
+    savedProperties = properties;
+    visibleProperties = 25;
     $("propertyCount").textContent = `${properties.length} saved`;
-    const list = $("propertyList");
-    list.replaceChildren(...properties.slice(0, 12).map(property => {
-      const item = document.createElement("button");
-      item.className = "property-row";
-      item.type = "button";
-      const identity = document.createElement("strong");
-      identity.textContent = property.property_identity;
-      const detail = document.createElement("span");
-      detail.textContent = `${stageNames[property.stage] || "Saved"} · ${property.action_count} action${property.action_count === 1 ? "" : "s"}`;
-      item.append(identity, detail);
-      item.addEventListener("click", () => showProperty(property.property_identity));
-      return item;
-    }));
+    renderProperties();
     if (!properties.length) $("propertiesDetail").textContent = "No saved homes yet. Add one with Quick capture while parked.";
-    else $("propertiesDetail").textContent = "Your latest saved homes are shown below. These are household captures only.";
+    else $("propertiesDetail").textContent = "Search or filter your household captures below.";
   } catch {
     $("propertyCount").textContent = "Unavailable";
     $("propertiesDetail").textContent = "Saved homes are unavailable right now. Your local capture queue is unchanged.";
@@ -179,6 +192,9 @@ $("captureForm").addEventListener("submit", async event => {
 });
 $("syncNow").addEventListener("click", sync);
 $("refreshProperties").addEventListener("click", refreshProperties);
+$("propertySearch").addEventListener("input", () => { visibleProperties = 25; renderProperties(); });
+$("propertyStageFilter").addEventListener("change", () => { visibleProperties = 25; renderProperties(); });
+$("moreProperties").addEventListener("click", () => { visibleProperties += 25; renderProperties(); });
 function csvCell(value) { return `"${String(value ?? "").replaceAll('"', '""')}"`; }
 $("exportProperties").addEventListener("click", async () => {
   const button = $("exportProperties");

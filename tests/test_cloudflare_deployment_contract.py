@@ -156,6 +156,10 @@ def test_private_crm_list_is_authenticated_and_does_not_require_provider_data():
     assert 'id="propertyNoteForm"' in page
     assert 'id="propertyOutreachForm"' in page
     assert 'saveSelectedPropertyAction' in app
+    assert 'id="propertySearch"' in page
+    assert 'id="propertyStageFilter"' in page
+    assert 'id="moreProperties"' in page
+    assert 'renderProperties' in app
     assert 'id="exportProperties"' in page
     assert 'fetch("/api/v1/properties"' in app
     assert 'URL.createObjectURL' in app

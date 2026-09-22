@@ -74,7 +74,13 @@
     <section class="card compact" aria-labelledby="properties-title">
       <div class="card-heading"><div><p class="eyebrow">Household CRM</p><h2 id="properties-title">Saved homes</h2></div><span class="pill" id="propertyCount">Checking…</span></div>
       <p class="help" id="propertiesDetail">Only homes saved by this household appear here. No external property or owner data has been imported.</p>
+      <div class="property-filters">
+        <input id="propertySearch" type="search" autocomplete="off" placeholder="Search saved property IDs" aria-label="Search saved property IDs">
+        <select id="propertyStageFilter" aria-label="Filter saved homes by stage"><option value="">All stages</option><option value="no_outreach">Saved / no outreach</option><option value="reached_out">Reached out</option><option value="waiting_for_reply">Haven’t heard back</option><option value="in_conversation">In conversation</option><option value="contractor_offer">Contractor offer</option><option value="realtor_referral">Given to realtor</option><option value="closed">Closed</option><option value="archived">Passed / archived</option></select>
+      </div>
+      <p class="help" id="propertyResults" aria-live="polite"></p>
       <div class="property-list" id="propertyList"></div>
+      <button class="secondary" id="moreProperties" type="button" hidden>Show more saved homes</button>
       <div class="property-detail" id="propertyDetail" hidden aria-live="polite">
         <p class="eyebrow">Selected home</p><h3 id="selectedProperty"></h3>
         <p id="selectedPropertySummary"></p>
