@@ -509,23 +509,35 @@ function drawMapStar(context, x, y) {
 }
 function drawStreetLabels(context, roadLines, project, width, height) {
   if (mapViewport.scale < 1.35) return;
-  const placed = [], named = new Set();
+  const candidates = new Map(), placed = [];
+  const centerX = width / 2, centerY = height / 2;
+  for (const road of roadLines) {
+    if (!road.name || road.name === "Unnamed street") continue;
+    for (let index = 1; index < road.coordinates.length; index += 1) {
+      const [x1, y1] = project(road.coordinates[index - 1]), [x2, y2] = project(road.coordinates[index]);
+      const x = (x1 + x2) / 2, y = (y1 + y2) / 2;
+      if (x < 28 || x > width - 28 || y < 12 || y > height - 12 || Math.hypot(x2 - x1, y2 - y1) < 20) continue;
+      const distance = Math.hypot(x - centerX, y - centerY), existing = candidates.get(road.name);
+      if (!existing || distance < existing.distance) candidates.set(road.name, { x, y, x1, y1, x2, y2, distance, name: road.name });
+    }
+  }
   context.save();
-  context.font = "700 11px system-ui, -apple-system, sans-serif";
+  context.font = "700 12px system-ui, -apple-system, sans-serif";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  for (const road of roadLines) {
-    if (!road.name || road.name === "Unnamed street" || named.has(road.name)) continue;
-    const point = road.coordinates[Math.floor(road.coordinates.length / 2)];
-    if (!point) continue;
-    const [x, y] = project(point);
-    if (x < 28 || x > width - 28 || y < 12 || y > height - 12 || placed.some(label => Math.hypot(label.x - x, label.y - y) < 48)) continue;
-    named.add(road.name); placed.push({ x, y });
+  for (const label of [...candidates.values()].sort((first, second) => first.distance - second.distance)) {
+    const { x, y } = label;
+    if (placed.some(existing => Math.hypot(existing.x - x, existing.y - y) < 54)) continue;
+    placed.push({ x, y });
+    let angle = Math.atan2(label.y2 - label.y1, label.x2 - label.x1);
+    if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI;
+    context.save(); context.translate(x, y); context.rotate(angle);
     context.lineWidth = 3;
     context.strokeStyle = "#f4f7fb";
-    context.strokeText(road.name, x, y);
+    context.strokeText(label.name, 0, 0);
     context.fillStyle = "#43536c";
-    context.fillText(road.name, x, y);
+    context.fillText(label.name, 0, 0);
+    context.restore();
   }
   context.restore();
 }
@@ -682,7 +694,7 @@ $("loadRoute").addEventListener("click", loadSelectedRoute);
 $("driveHistory").addEventListener("toggle", async event => {
   if (!event.currentTarget.open) {
     selectedRoutePaths = [];
-    $("routeDetail").textContent = "Drag to pan. Pinch or scroll to zoom. Street names appear as you zoom in. Bright green is already covered; blue-gray is still to cover; gold stars are tagged homes.";
+    $("routeDetail").textContent = "Drag to pan. Pinch or scroll deeply to zoom. Street names follow their street direction as you zoom in. Bright green is already covered; blue-gray is still to cover; gold stars are tagged homes.";
     return drawCoverageMap();
   }
   try { await loadRouteSessions(); }
@@ -719,6 +731,14 @@ document.querySelectorAll("[data-map-city]").forEach(button => button.addEventLi
 }));
 const mapCanvas = $("routeMap");
 function mapPointer(event) { const rect = mapCanvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
+function zoomMapAt(x, y, factor) {
+  const width = mapCanvas.clientWidth || 600, height = width * 0.6;
+  const nextScale = Math.min(128, Math.max(1, mapViewport.scale * factor));
+  const actualFactor = nextScale / mapViewport.scale;
+  mapViewport.x = x - width / 2 - (x - width / 2 - mapViewport.x) * actualFactor;
+  mapViewport.y = y - height / 2 - (y - height / 2 - mapViewport.y) * actualFactor;
+  mapViewport.scale = nextScale;
+}
 mapCanvas.addEventListener("pointerdown", event => { activePointers.set(event.pointerId, mapPointer(event)); mapCanvas.setPointerCapture(event.pointerId); });
 mapCanvas.addEventListener("pointermove", event => {
   if (!activePointers.has(event.pointerId)) return;
@@ -727,11 +747,12 @@ mapCanvas.addEventListener("pointermove", event => {
   if (activePointers.size === 2) {
     const oldPoints = before.map(([id, point]) => id === event.pointerId ? previous : point), newPoints = [...activePointers.values()];
     const oldDistance = Math.hypot(oldPoints[0].x - oldPoints[1].x, oldPoints[0].y - oldPoints[1].y), newDistance = Math.hypot(newPoints[0].x - newPoints[1].x, newPoints[0].y - newPoints[1].y);
-    if (oldDistance > 0) { mapViewport.scale = Math.min(10, Math.max(1, mapViewport.scale * newDistance / oldDistance)); drawCoverageMap(); }
+    const oldCenter = { x: (oldPoints[0].x + oldPoints[1].x) / 2, y: (oldPoints[0].y + oldPoints[1].y) / 2 }, newCenter = { x: (newPoints[0].x + newPoints[1].x) / 2, y: (newPoints[0].y + newPoints[1].y) / 2 };
+    if (oldDistance > 0) { zoomMapAt(oldCenter.x, oldCenter.y, newDistance / oldDistance); mapViewport.x += newCenter.x - oldCenter.x; mapViewport.y += newCenter.y - oldCenter.y; drawCoverageMap(); }
   }
 });
 ["pointerup", "pointercancel"].forEach(name => mapCanvas.addEventListener(name, event => activePointers.delete(event.pointerId)));
-mapCanvas.addEventListener("wheel", event => { event.preventDefault(); mapViewport.scale = Math.min(10, Math.max(1, mapViewport.scale * (event.deltaY < 0 ? 1.16 : 1 / 1.16))); drawCoverageMap(); }, { passive: false });
+mapCanvas.addEventListener("wheel", event => { event.preventDefault(); const point = mapPointer(event); zoomMapAt(point.x, point.y, event.deltaY < 0 ? 1.2 : 1 / 1.2); drawCoverageMap(); }, { passive: false });
 document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
   const input = $(button.dataset.copy);
   try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }
