@@ -91,7 +91,7 @@ async function sync() {
     writeQueue(queue.filter(item => !confirmed.has(item.event_id)));
     refreshStatus();
     if (confirmed.size) refreshProperties();
-    toast(confirmed.size ? "Saved to your shared workspace." : "Nothing new was accepted yet.");
+    toast(confirmed.size ? "Saved to your private household app." : "Nothing new was accepted yet.");
   } catch { refreshStatus("Secure sync is unavailable. Your captures remain queued on this phone."); }
   finally { $("syncNow").disabled = false; }
 }
@@ -358,18 +358,18 @@ $("exportProperties").addEventListener("click", async () => {
 });
 $("propertyStageForm").addEventListener("submit", async event => {
   event.preventDefault();
-  await saveSelectedPropertyAction("stage_changed", { stage: $("selectedPropertyStage").value }, "Stage saved to your shared workspace.");
+  await saveSelectedPropertyAction("stage_changed", { stage: $("selectedPropertyStage").value }, "Stage saved to your private household app.");
 });
 $("propertyNoteForm").addEventListener("submit", async event => {
   event.preventDefault();
   const note = $("selectedPropertyNote").value.trim();
   if (!note) return toast("Write a note before saving it.");
   $("selectedPropertyNote").value = "";
-  await saveSelectedPropertyAction("note_added", { note }, "Private note saved to your shared workspace.");
+  await saveSelectedPropertyAction("note_added", { note }, "Private note saved to your private household app.");
 });
 $("propertyOutreachForm").addEventListener("submit", async event => {
   event.preventDefault();
-  await saveSelectedPropertyAction("outreach_logged", { method: $("selectedPropertyOutreach").value }, "Outreach saved to your shared workspace.");
+  await saveSelectedPropertyAction("outreach_logged", { method: $("selectedPropertyOutreach").value }, "Outreach saved to your private household app.");
 });
 $("prepareRecorder").addEventListener("click", async () => {
   const button = $("prepareRecorder");

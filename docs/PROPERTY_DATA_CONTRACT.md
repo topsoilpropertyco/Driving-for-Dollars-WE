@@ -11,7 +11,7 @@ fixture during this phase.
 The future protected service, not this public repository or Pages site, will
 store private property and owner data.
 
-The protected household phone app exports saved household property IDs and
+The protected household phone app exports saved household addresses and
 workflow state as a vendor-neutral CSV. The household may import that file
 into any outside service it chooses; Five Pointes does not select, connect to,
 or receive data from a vendor.
