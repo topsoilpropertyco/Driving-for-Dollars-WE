@@ -19,7 +19,10 @@ function toast(message) { $("toast").textContent = message; $("toast").classList
 function refreshStatus(message) {
   const queue = readQueue();
   $("queueCount").textContent = `${queue.length} queued`;
-  $("syncDetail").textContent = message || (queue.length ? `${queue.length} action${queue.length === 1 ? "" : "s"} waiting safely on this phone.` : "Nothing waiting to send.");
+  $("syncNow").hidden = !queue.length;
+  $("syncNow").textContent = "Sync queued captures now";
+  $("syncDetail").textContent = message || (queue.length ? `${queue.length} tagged home action${queue.length === 1 ? "" : "s"} waiting safely on this phone. You can sync now, or it will retry automatically when online.` : "Tagged homes sync automatically when your phone is online. Nothing is waiting.");
+  $("sync-title").textContent = queue.length ? "Captures waiting safely" : "Nothing to do";
   const connected = navigator.onLine;
   $("connection").textContent = connected ? "Online — private sync available" : "Offline — captures stay on this phone";
   $("connection").classList.toggle("offline", !connected);
@@ -46,6 +49,13 @@ function renderTrackerSignal(status) {
   } else {
     $("trackerState").textContent = "No recent tracker signal";
     $("trackerDetail").textContent = `Turn on Continuous tracking in Traccar and begin moving. This light turns green after a private report arrives.${seenDetail}`;
+  }
+  if (status.active_devices) {
+    $("recorderDetail").textContent = "This iPhone is already configured. You do not need to press anything here. For a drive, use Traccar to turn Continuous tracking on before leaving and off after parking.";
+    $("prepareRecorder").hidden = true;
+  } else {
+    $("recorderDetail").textContent = "No recorder is configured for this household yet. Set up a phone only when you want to add a new driving recorder.";
+    $("prepareRecorder").hidden = false;
   }
 }
 async function refreshTrackerSignal() {

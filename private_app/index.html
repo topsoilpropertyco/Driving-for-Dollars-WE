@@ -30,7 +30,7 @@
       <button class="active" type="button" data-dashboard-view="map">Map</button>
       <button type="button" data-dashboard-view="properties">Tag homes</button>
       <button type="button" data-dashboard-view="pipeline">Pipeline</button>
-      <button type="button" data-dashboard-view="crm">Workspace</button>
+      <button type="button" data-dashboard-view="crm">Admin</button>
     </nav>
 
     <section class="card compact drive-guide dashboard-panel" data-dashboard-panel="crm" aria-labelledby="drive-guide-title">
@@ -44,7 +44,7 @@
     </section>
 
     <section class="card field-test dashboard-panel" data-dashboard-panel="crm" aria-labelledby="field-test-title">
-      <div class="card-heading"><div><p class="eyebrow">Next field test</p><h2 id="field-test-title">Daycare drive tomorrow morning</h2></div><span class="pill">Planned</span></div>
+      <div class="card-heading"><div><p class="eyebrow">Next drive</p><h2 id="field-test-title">Private recorder check</h2></div><span class="pill">Optional guide</span></div>
       <ol>
         <li>Before leaving, open Traccar and turn <strong>Continuous tracking</strong> on.</li>
         <li>Drive normally with the phone locked; use navigation normally if needed.</li>
@@ -122,15 +122,15 @@
     </section>
 
     <section class="card compact dashboard-panel" data-dashboard-panel="crm" aria-labelledby="sync-title">
-      <div class="card-heading"><div><p class="eyebrow">Sync</p><h2 id="sync-title">Your phone keeps the queue</h2></div></div>
-      <p id="syncDetail">Nothing waiting to send.</p>
-      <button class="secondary" id="syncNow" type="button">Sync now</button>
+      <div class="card-heading"><div><p class="eyebrow">Automatic sync</p><h2 id="sync-title">Nothing to do</h2></div></div>
+      <p id="syncDetail">Tagged homes sync automatically when your phone is online.</p>
+      <button class="secondary" id="syncNow" type="button" hidden>Sync queued captures now</button>
     </section>
 
     <section class="card compact dashboard-panel" data-dashboard-panel="crm" aria-labelledby="recorder-title">
-      <div class="card-heading"><div><p class="eyebrow">Driving recorder</p><h2 id="recorder-title">Prepare this iPhone</h2></div><span class="pill">Pilot</span></div>
-      <p id="recorderDetail">Create a private one-phone setup for the background-recording pilot. No location is collected until you start recording in Traccar.</p>
-      <button class="secondary" id="prepareRecorder" type="button">Prepare recorder</button>
+      <div class="card-heading"><div><p class="eyebrow">Driving recorder</p><h2 id="recorder-title">Recorder status</h2></div><span class="pill">Pilot</span></div>
+      <p id="recorderDetail">Checking whether this iPhone is already configured.</p>
+      <button class="secondary" id="prepareRecorder" type="button" hidden>Set up a new phone</button>
       <div class="recorder-config" id="recorderConfig" hidden>
         <p><strong>1.</strong> Install Traccar Client from the App Store.</p>
         <p><strong>2.</strong> In its settings, enter these values exactly. They are private to this phone—do not share or screenshot them.</p>
@@ -179,11 +179,10 @@
 
     <section class="card compact dashboard-panel" data-dashboard-panel="pipeline" aria-labelledby="pipeline-title">
       <div class="card-heading"><div><p class="eyebrow">Household pipeline</p><h2 id="pipeline-title">From saved home to closed</h2></div></div>
-      <p class="help">These are real household workflow counts. “Properties passed” is intentionally not estimated until a verified building/parcel reference is available.</p>
+      <p class="help">These are real household workflow counts, based only on homes you have actually tagged. A building-map reference is not used until it is verified as residential parcel data.</p>
       <div class="pipeline-list">
-        <div><span>Properties passed</span><strong id="pipelinePassed">Not modeled</strong></div>
         <div><span>Saved</span><strong id="pipelineSaved">0</strong></div>
-        <div><span>Reached out</span><strong id="pipelineReached">0</strong></div>
+        <div><span>Outreach started</span><strong id="pipelineReached">0</strong></div>
         <div><span>In conversation</span><strong id="pipelineConversation">0</strong></div>
         <div><span>Contractor offer</span><strong id="pipelineOffer">0</strong></div>
         <div><span>Closed</span><strong id="pipelineClosed">0</strong></div>
