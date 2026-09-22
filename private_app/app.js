@@ -50,9 +50,12 @@ function renderTrackerSignal(status) {
     $("trackerState").textContent = "No recent tracker signal";
     $("trackerDetail").textContent = `Turn on Continuous tracking in Traccar and begin moving. This light turns green after a private report arrives.${seenDetail}`;
   }
-  if (status.active_devices) {
-    $("recorderDetail").textContent = "This iPhone is already configured. You do not need to press anything here. For a drive, use Traccar to turn Continuous tracking on before leaving and off after parking.";
+  if (status.account_active_devices) {
+    $("recorderDetail").textContent = "This account already has a recorder. For a drive, use Traccar to turn Continuous tracking on before leaving and off after parking.";
     $("prepareRecorder").hidden = true;
+  } else if (status.active_devices) {
+    $("recorderDetail").textContent = "A household recorder is active on another phone. Set up this phone to add its own private recorder to the shared coverage map.";
+    $("prepareRecorder").hidden = false;
   } else {
     $("recorderDetail").textContent = "No recorder is configured for this household yet. Set up a phone only when you want to add a new driving recorder.";
     $("prepareRecorder").hidden = false;
@@ -426,7 +429,7 @@ $("checkRecorder").addEventListener("click", async () => {
     const response = await fetch("/api/v1/recorders/status", { cache: "no-store" });
     if (!response.ok) throw new Error("recorder status failed");
     const status = await response.json();
-    if (!status.active_devices) $("recorderHealth").textContent = "No active recorder is configured on this account.";
+    if (!status.account_active_devices) $("recorderHealth").textContent = "This phone's recorder is not configured yet.";
     else if (!status.points_received) $("recorderHealth").textContent = "Recorder is ready. No location points have arrived yet.";
     else $("recorderHealth").textContent = `${status.points_received} location point${status.points_received === 1 ? "" : "s"} received privately.`;
   } catch {

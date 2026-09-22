@@ -81,14 +81,15 @@ async function bootstrapRecorder(request, env, email) {
   }, 201);
 }
 
-async function recorderStatus(env) {
+async function recorderStatus(env, email) {
   // Deliberately return aggregate delivery health only. Location data stays in
   // the isolated recorder store and is never exposed to the phone dashboard.
   const row = await env.DB.prepare(
-    "SELECT COUNT(DISTINCT d.device_id) AS active_devices, COUNT(p.device_id) AS points_received, MAX(p.received_at) AS latest_received_at, MAX(p.recorded_at) AS latest_recorded_at FROM recorder_devices d LEFT JOIN recorder_points p ON p.device_id = d.device_id WHERE d.revoked_at IS NULL"
-  ).bind().first();
+    "SELECT COUNT(DISTINCT d.device_id) AS active_devices, SUM(CASE WHEN d.created_by_email = ? THEN 1 ELSE 0 END) AS account_active_devices, COUNT(p.device_id) AS points_received, MAX(p.received_at) AS latest_received_at, MAX(p.recorded_at) AS latest_recorded_at FROM recorder_devices d LEFT JOIN recorder_points p ON p.device_id = d.device_id WHERE d.revoked_at IS NULL"
+  ).bind(email).first();
   return json({
     active_devices: Number(row?.active_devices || 0),
+    account_active_devices: Number(row?.account_active_devices || 0),
     points_received: Number(row?.points_received || 0),
     latest_received_at: row?.latest_received_at || null,
     latest_recorded_at: row?.latest_recorded_at || null,
@@ -449,7 +450,7 @@ export default {
     try {
       if (request.method === "GET" && url.pathname === "/api/health") return json({ status: "private-ready" });
       if (request.method === "POST" && url.pathname === "/api/v1/recorders/bootstrap") return bootstrapRecorder(request, env, email);
-      if (request.method === "GET" && url.pathname === "/api/v1/recorders/status") return recorderStatus(env);
+      if (request.method === "GET" && url.pathname === "/api/v1/recorders/status") return recorderStatus(env, email);
       if (request.method === "GET" && url.pathname === "/api/v1/recorders/latest-route") {
         const sessionId = url.searchParams.get("session");
         return latestRecorderRoute(env, sessionId && sessionId.length <= 80 ? sessionId : null);
