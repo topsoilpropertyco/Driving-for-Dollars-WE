@@ -59,6 +59,7 @@
         <label for="propertyIdentity">Address</label>
         <input id="propertyIdentity" name="propertyIdentity" autocomplete="street-address" inputmode="text" placeholder="Street address" required maxlength="256">
         <div class="address-suggestions" id="addressSuggestions" role="listbox" aria-label="Address suggestions" hidden></div>
+        <p class="help" id="addressSearchStatus" aria-live="polite" hidden></p>
         <p class="help">Use the home’s street address only. Do not enter an owner name, phone number, or email.</p>
 
         <fieldset class="condition-picker"><legend>House condition</legend>
@@ -81,9 +82,9 @@
 
     <section class="card compact dashboard-panel" data-dashboard-panel="properties" aria-labelledby="properties-title">
       <div class="card-heading"><div><p class="eyebrow">Saved homes</p><h2 id="properties-title">Your tagged houses</h2></div><span class="pill" id="propertyCount">Checking…</span></div>
-      <p class="help" id="propertiesDetail">Your tagged homes are private to this household. Map stars appear only where you deliberately saved a current location.</p>
+      <p class="help" id="propertiesDetail">Your tagged homes are private to this household. Every saved tag gets a gold map star at its selected address or your current location.</p>
       <div class="property-filters">
-        <input id="propertySearch" type="search" autocomplete="off" placeholder="Search saved property IDs" aria-label="Search saved property IDs">
+        <input id="propertySearch" type="search" autocomplete="off" placeholder="Search saved homes or addresses" aria-label="Search saved homes or addresses">
         <select id="propertyStageFilter" aria-label="Filter saved homes by stage"><option value="">All stages</option><option value="no_outreach">Saved / no outreach</option><option value="reached_out">Reached out</option><option value="waiting_for_reply">Haven’t heard back</option><option value="in_conversation">In conversation</option><option value="contractor_offer">Contractor offer</option><option value="realtor_referral">Given to realtor</option><option value="closed">Closed</option><option value="archived">Passed / archived</option></select>
       </div>
       <p class="help" id="propertyResults" aria-live="polite"></p>

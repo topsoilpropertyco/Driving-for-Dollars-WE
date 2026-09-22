@@ -152,6 +152,11 @@ let addressSession = crypto.randomUUID();
 let selectedAddress = null;
 let addressSearchTimer;
 function hideAddressSuggestions() { $("addressSuggestions").replaceChildren(); $("addressSuggestions").hidden = true; }
+function setAddressSearchStatus(message = "") {
+  const status = $("addressSearchStatus");
+  status.textContent = message;
+  status.hidden = !message;
+}
 function renderAddressSuggestions(suggestions) {
   const list = $("addressSuggestions");
   list.replaceChildren(...suggestions.map(suggestion => {
@@ -164,6 +169,7 @@ function renderAddressSuggestions(suggestions) {
 }
 async function selectAddressSuggestion(suggestion) {
   hideAddressSuggestions();
+  setAddressSearchStatus();
   $("propertyIdentity").disabled = true;
   $("locationStatus").textContent = "Confirming selected address…";
   try {
@@ -181,14 +187,21 @@ $("propertyIdentity").addEventListener("input", () => {
   selectedAddress = null;
   clearTimeout(addressSearchTimer);
   const query = $("propertyIdentity").value.trim();
-  if (query.length < 3) return hideAddressSuggestions();
+  if (query.length < 3) {
+    hideAddressSuggestions();
+    return setAddressSearchStatus();
+  }
   addressSearchTimer = setTimeout(async () => {
     try {
       const response = await fetch(`/api/v1/address-autocomplete?q=${encodeURIComponent(query)}&session=${encodeURIComponent(addressSession)}`, { cache: "no-store" });
       if (!response.ok) throw new Error("address search unavailable");
       const { suggestions } = await response.json();
       renderAddressSuggestions(suggestions);
-    } catch { hideAddressSuggestions(); }
+      setAddressSearchStatus(suggestions.length ? "Choose a suggestion to place an exact address star." : "Keep typing to look for an address.");
+    } catch {
+      hideAddressSuggestions();
+      setAddressSearchStatus("Address suggestions are not connected right now. Type the complete address; saving uses your current location for the map star.");
+    }
   }, 250);
 });
 function renderProperties() {
@@ -298,7 +311,8 @@ $("startFreshCoverage").addEventListener("click", async () => {
     storedCoverageSegments = new Set();
     $("freshCoverageCard").hidden = true;
     $("freshCoverageDetail").textContent = "Fresh coverage is active. Earlier private data is retained, not deleted.";
-    await refreshCoverageHistory();
+    coverageHistoryReady = refreshCoverageHistory();
+    await coverageHistoryReady;
     await refreshCoverageFromCompletedDrives();
     toast("Fresh coverage map started. Nothing was deleted.");
   } catch {
@@ -327,7 +341,7 @@ $("exportProperties").addEventListener("click", async () => {
     const response = await fetch("/api/v1/properties", { cache: "no-store" });
     if (!response.ok) throw new Error("saved homes unavailable");
     const { properties } = await response.json();
-    const rows = [["property_identity", "stage", "action_count", "last_activity_at"], ...properties.map(property => [property.property_identity, property.stage, property.action_count, property.last_activity_at])];
+    const rows = [["address", "stage", "action_count", "last_activity_at"], ...properties.map(property => [property.property_identity, property.stage, property.action_count, property.last_activity_at])];
     const file = new Blob([rows.map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(file);
@@ -464,8 +478,12 @@ async function persistCoveragePreview(coverage) {
     // the derived-history write is temporarily unavailable.
   }
 }
+let coverageHistoryReady = Promise.resolve();
+let coverageHistoryRefresh = null;
 async function refreshCoverageHistory() {
-  try {
+  if (coverageHistoryRefresh) return coverageHistoryRefresh;
+  coverageHistoryRefresh = (async () => {
+    try {
     const [response, streetLines] = await Promise.all([fetch("/api/v1/coverage-preview", { cache: "no-store" }), roads()]);
     if (!response.ok) throw new Error("coverage history unavailable");
     const history = await response.json();
@@ -477,8 +495,14 @@ async function refreshCoverageHistory() {
     $("freshCoverageCard").hidden = Boolean(campaignStartedAt);
     if (campaignStartedAt) $("freshCoverageDetail").textContent = "Fresh coverage is active. Earlier private data is retained, not deleted.";
     drawCoverageMap();
-  } catch {
-    // The map can still calculate a current-drive preview after it loads.
+    } catch {
+      // The map can still calculate a current-drive preview after it loads.
+    }
+  })();
+  try {
+    return await coverageHistoryRefresh;
+  } finally {
+    coverageHistoryRefresh = null;
   }
 }
 
@@ -702,6 +726,7 @@ $("driveHistory").addEventListener("toggle", async event => {
 });
 async function refreshCoverageFromCompletedDrives() {
   try {
+    await coverageHistoryReady;
     await loadRouteSessions();
     const sessionIds = routeSessions
       .filter(session => !campaignStartedAt || Date.parse(session.started_at) >= Date.parse(campaignStartedAt))
@@ -765,7 +790,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-wor
 refreshStatus();
 refreshProperties();
 refreshTrackerSignal();
-refreshCoverageHistory();
+coverageHistoryReady = refreshCoverageHistory();
 activateDashboard("map");
 refreshCoverageFromCompletedDrives();
 setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000);
