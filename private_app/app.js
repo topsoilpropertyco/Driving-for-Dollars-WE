@@ -95,6 +95,9 @@ async function sync() {
   } catch { refreshStatus("Secure sync is unavailable. Your captures remain queued on this phone."); }
   finally { $("syncNow").disabled = false; }
 }
+function syncQueuedCapturesWhenOnline() {
+  if (navigator.onLine && readQueue().length) void sync();
+}
 
 const stageNames = {
   no_outreach: "Saved / no outreach", reached_out: "Reached out", waiting_for_reply: "Haven’t heard back", in_conversation: "In conversation",
@@ -894,11 +897,17 @@ document.querySelectorAll("[data-copy]").forEach(button => button.addEventListen
   try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }
   catch { input.select(); toast("Select and copy the private value."); }
 }));
-window.addEventListener("online", sync);
+window.addEventListener("online", syncQueuedCapturesWhenOnline);
 window.addEventListener("offline", () => refreshStatus());
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refreshTrackerSignal(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    refreshTrackerSignal();
+    syncQueuedCapturesWhenOnline();
+  }
+});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-worker.js").catch(() => {});
 refreshStatus();
+syncQueuedCapturesWhenOnline();
 refreshProperties();
 refreshTrackerSignal();
 coverageHistoryReady = refreshCoverageHistory();
