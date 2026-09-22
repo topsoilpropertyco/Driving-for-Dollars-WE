@@ -287,15 +287,15 @@ textarea:focus-visible {
 .map-city-picker { display: flex; gap: 7px; overflow-x: auto; margin: 0 -2px 14px; padding: 2px; scrollbar-width: none; }
 .map-city-picker button { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; padding: 8px 11px; background: #fff; color: var(--muted); font: inherit; font-size: 12px; font-weight: 800; }
 .map-city-picker button.active { border-color: var(--ink); background: var(--ink); color: #fff; }
-.map-controls { display: flex; gap: 8px; justify-content: flex-end; margin: -5px 0 2px; }
-.map-controls .secondary { min-height: 36px; padding: 7px 12px; font-size: 14px; }
-.map-controls #zoomMapIn, .map-controls #zoomMapOut { min-width: 40px; font-size: 21px; line-height: 1; }
+.map-controls { display: flex; gap: 6px; justify-content: center; margin: 0 0 12px; }
+.map-controls .secondary { width: auto; min-height: 30px; padding: 4px 10px; border-radius: 9px; font-size: 12px; }
+.map-controls #zoomMapIn, .map-controls #zoomMapOut { min-width: 32px; padding: 3px 8px; font-size: 18px; line-height: 1; }
 @media (max-width: 680px) {
-  .coverage-map-card { margin-right: -20px; margin-left: -20px; padding-right: 0; padding-left: 0; border-radius: 0; border-right: 0; border-left: 0; }
-  .coverage-map-card > :not(.route-map) { margin-right: 20px; margin-left: 20px; }
-  .coverage-map-card .map-city-picker { margin: 0 18px 10px; }
-  .coverage-map-card .map-controls { margin: 0 20px 2px; }
-  .coverage-map-card .route-map { border-radius: 0; border-right: 0; border-left: 0; }
+  .coverage-map-card { margin-right: -12px; margin-left: -12px; padding-right: 8px; padding-left: 8px; border-radius: 18px; overflow: hidden; }
+  .coverage-map-card > :not(.route-map) { margin-right: 12px; margin-left: 12px; }
+  .coverage-map-card .map-city-picker { margin: 0 10px 10px; }
+  .coverage-map-card .map-controls { margin: 0 12px 12px; }
+  .coverage-map-card .route-map { border-radius: 12px; }
 }
 @media (max-height: 700px) {
   .route-map { height: 78svh; min-height: 500px; }

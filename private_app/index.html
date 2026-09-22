@@ -155,12 +155,12 @@
         <button data-map-city="Shores" type="button">Shores</button>
         <button data-map-city="Woods" type="button">Woods</button>
       </div>
+      <canvas class="route-map" id="routeMap" width="600" height="360" role="img" aria-label="Interactive map of five pointes street coverage. Bright green streets are covered candidate segments, muted blue-gray streets are not yet covered, and gold stars are saved homes with a private map location."></canvas>
       <div class="map-controls" role="group" aria-label="Map zoom controls">
         <button class="secondary" id="zoomMapOut" type="button" aria-label="Zoom map out">−</button>
         <button class="secondary" id="zoomMapIn" type="button" aria-label="Zoom map in">+</button>
-        <button class="secondary" id="resetMapView" type="button">Reset view</button>
+        <button class="secondary" id="resetMapView" type="button">Reset</button>
       </div>
-      <canvas class="route-map" id="routeMap" width="600" height="360" role="img" aria-label="Interactive map of five pointes street coverage. Bright green streets are covered candidate segments, muted blue-gray streets are not yet covered, and gold stars are saved homes with a private map location."></canvas>
       <p id="routeDetail">Drag to pan. Pinch, double-tap, use +, or scroll to zoom deeply. Street names follow their street direction as you zoom in. Bright green is already covered; blue-gray is still to cover; gold stars are tagged homes.</p>
       <div class="map-legend" aria-label="Map legend"><span class="covered">Covered</span><span class="uncovered">Still to cover</span><span class="saved-home">★ Tagged home</span></div>
       <h3 class="scoreboard-title">Overall driving scoreboard</h3>
