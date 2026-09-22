@@ -34,8 +34,11 @@ body {
 header {
   padding: 16px 4px 25px;
 }
-.dashboard-nav { position: sticky; z-index: 4; top: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 -4px 16px; padding: 8px 4px; background: color-mix(in srgb, var(--wash) 92%, transparent); backdrop-filter: blur(10px); }
-.dashboard-nav button { border: 0; border-radius: 10px; padding: 10px 6px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 800; }
+.connection-row { display: flex; align-items: center; gap: 8px; }
+.settings-shortcut { width: 31px; height: 31px; flex: none; border: 1px solid var(--line); border-radius: 50%; padding: 0; background: #eef2f7; color: #667085; font-size: 17px; line-height: 1; }
+.settings-shortcut[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: #fff; }
+.dashboard-nav { position: sticky; z-index: 4; top: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 -4px 16px; padding: 8px 4px; background: color-mix(in srgb, var(--wash) 92%, transparent); backdrop-filter: blur(10px); }
+.dashboard-nav button { border: 1px solid var(--line); border-radius: 13px; padding: 10px 6px; background: #eef2f7; color: var(--muted); font: inherit; font-size: 12px; font-weight: 800; }
 .dashboard-nav button.active { background: var(--ink); color: #fff; }
 .dashboard-panel[hidden] { display: none; }
 .eyebrow {

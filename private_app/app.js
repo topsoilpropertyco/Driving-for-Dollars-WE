@@ -323,11 +323,13 @@ $("startFreshCoverage").addEventListener("click", async () => {
 });
 function activateDashboard(view) {
   document.querySelectorAll("[data-dashboard-view]").forEach(item => item.classList.toggle("active", item.dataset.dashboardView === view));
+  $("settingsShortcut").setAttribute("aria-pressed", String(view === "crm"));
   document.querySelectorAll("[data-dashboard-panel]").forEach(panel => { panel.hidden = panel.dataset.dashboardPanel !== view; });
   if (view === "map") { drawCoverageMap(); refreshCoverageFromCompletedDrives(); }
   if (view === "properties" || view === "pipeline") refreshProperties();
 }
 document.querySelectorAll("[data-dashboard-view]").forEach(button => button.addEventListener("click", () => activateDashboard(button.dataset.dashboardView)));
+$("settingsShortcut").addEventListener("click", () => { activateDashboard("crm"); window.scrollTo({ top: 0, behavior: "smooth" }); });
 $("refreshProperties").addEventListener("click", refreshProperties);
 $("propertySearch").addEventListener("input", () => { visibleProperties = 25; renderProperties(); });
 $("propertyStageFilter").addEventListener("change", () => { visibleProperties = 25; renderProperties(); });

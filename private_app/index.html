@@ -19,7 +19,10 @@
       <p class="eyebrow">Five Pointes</p>
       <h1>Capture a home,<br>then keep moving.</h1>
       <p class="subhead">Private household app. Use while parked or as a passenger.</p>
-      <p class="connection" id="connection" role="status">Checking connection…</p>
+      <div class="connection-row">
+        <p class="connection" id="connection" role="status">Checking connection…</p>
+        <button class="settings-shortcut" id="settingsShortcut" type="button" aria-label="Open settings" aria-pressed="false" title="Settings">⚙</button>
+      </div>
       <section class="tracker-signal" id="trackerSignal" data-state="checking" aria-live="polite" aria-label="Live tracker signal">
         <span class="tracker-light" aria-hidden="true"></span>
         <div><p class="eyebrow">Live tracker signal</p><strong id="trackerState">Checking recorder…</strong><p id="trackerDetail">This light confirms a recent private location report, not merely the Traccar switch position.</p></div>
@@ -30,7 +33,6 @@
       <button class="active" type="button" data-dashboard-view="map">Map</button>
       <button type="button" data-dashboard-view="properties">Tag homes</button>
       <button type="button" data-dashboard-view="pipeline">Pipeline</button>
-      <button type="button" data-dashboard-view="crm">Admin</button>
     </nav>
 
     <section class="card compact drive-guide dashboard-panel" data-dashboard-panel="crm" aria-labelledby="drive-guide-title">
