@@ -470,6 +470,28 @@ function drawMapStar(context, x, y) {
   for (let index = 0; index < 10; index += 1) { const angle = -Math.PI / 2 + index * Math.PI / 5, radius = index % 2 ? 3.5 : 8, px = Math.cos(angle) * radius, py = Math.sin(angle) * radius; if (index) context.lineTo(px, py); else context.moveTo(px, py); }
   context.closePath(); context.fillStyle = "#f6b73c"; context.fill(); context.lineWidth = 2; context.strokeStyle = "#684400"; context.stroke(); context.restore();
 }
+function drawStreetLabels(context, roadLines, project, width, height) {
+  if (mapViewport.scale < 1.35) return;
+  const placed = [], named = new Set();
+  context.save();
+  context.font = "700 11px system-ui, -apple-system, sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  for (const road of roadLines) {
+    if (!road.name || road.name === "Unnamed street" || named.has(road.name)) continue;
+    const point = road.coordinates[Math.floor(road.coordinates.length / 2)];
+    if (!point) continue;
+    const [x, y] = project(point);
+    if (x < 28 || x > width - 28 || y < 12 || y > height - 12 || placed.some(label => Math.hypot(label.x - x, label.y - y) < 48)) continue;
+    named.add(road.name); placed.push({ x, y });
+    context.lineWidth = 3;
+    context.strokeStyle = "#f4f7fb";
+    context.strokeText(road.name, x, y);
+    context.fillStyle = "#43536c";
+    context.fillText(road.name, x, y);
+  }
+  context.restore();
+}
 async function drawCoverageMap() {
   const canvas = $("routeMap");
   if (!canvas) return;
@@ -489,6 +511,7 @@ async function drawCoverageMap() {
     if (!storedCoverageSegments.has(roadSegmentKey(road, index))) continue;
     const [x1, y1] = project(road.coordinates[index - 1]), [x2, y2] = project(road.coordinates[index]); context.beginPath(); context.moveTo(x1, y1); context.lineTo(x2, y2); context.stroke();
   }
+  drawStreetLabels(context, visibleRoads, project, width, height);
   if (selectedRoutePaths.length) {
     context.strokeStyle = "#2d6df6"; context.lineWidth = 3; context.lineJoin = "round";
     for (const route of selectedRoutePaths) { context.beginPath(); route.forEach((point, index) => { const [x, y] = project(point); if (index) context.lineTo(x, y); else context.moveTo(x, y); }); context.stroke(); }
@@ -620,7 +643,7 @@ $("loadRoute").addEventListener("click", loadSelectedRoute);
 $("driveHistory").addEventListener("toggle", async event => {
   if (!event.currentTarget.open) {
     selectedRoutePaths = [];
-    $("routeDetail").textContent = "Drag to pan. Pinch or scroll to zoom. Bright green is already covered; blue-gray is still to cover; gold stars are tagged homes.";
+    $("routeDetail").textContent = "Drag to pan. Pinch or scroll to zoom. Street names appear as you zoom in. Bright green is already covered; blue-gray is still to cover; gold stars are tagged homes.";
     return drawCoverageMap();
   }
   try { await loadRouteSessions(); }
