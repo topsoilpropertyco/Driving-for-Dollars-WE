@@ -29,6 +29,10 @@ def test_private_schema_and_readme_keep_gps_storage_private():
     assert "household_actions" in schema
     assert "no public bucket endpoint" in readme
     assert "approval" in readme
+    coverage_schema = (ROOT / "cloudflare" / "migrations" / "0004_coverage_preview_history.sql").read_text().lower()
+    assert "coverage_preview_segments" in coverage_schema
+    assert "latitude" in coverage_schema and "longitude" in coverage_schema
+    assert "recorder credential" in coverage_schema
 
 
 def test_import_plan_api_only_accepts_sanitized_staging_fields():
@@ -132,6 +136,8 @@ def test_private_route_map_uses_authenticated_api_and_bundled_street_context():
     assert 'data-dashboard-view="pipeline"' in page
     assert 'id="overallCoverage"' in page
     assert 'renderPipeline' in app
+    assert 'fetch("/api/v1/coverage-preview"' in app
+    assert 'coverage_preview_segments' in worker
 
 
 def test_private_phone_shell_has_a_recent_signal_indicator_not_a_claimed_switch_state():

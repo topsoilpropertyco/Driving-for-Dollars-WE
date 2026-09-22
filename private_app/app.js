@@ -316,6 +316,30 @@ async function roads() {
 
 function roadSegmentKey(road, index) { return `${road.id || road.name}|${index}`; }
 function coveragePercent(coverage) { return coverage.totalMeters ? `${((coverage.coveredMeters / coverage.totalMeters) * 100).toFixed(1)}%` : "—"; }
+function coverageFromStoredSegments(segmentIds, streetLines) {
+  const seen = new Set();
+  let totalMeters = 0, coveredMeters = 0;
+  for (const road of streetLines) {
+    for (let index = 1; index < road.coordinates.length; index += 1) {
+      const first = road.coordinates[index - 1], second = road.coordinates[index];
+      const duplicateKey = [first, second].map(point => point.map(value => Number(value).toFixed(7)).join(",")).sort().join("|");
+      if (seen.has(duplicateKey)) continue;
+      seen.add(duplicateKey);
+      const latitude = (first[1] + second[1]) / 2;
+      const [start, end] = [first, second].map(point => [point[0] * 111_320 * Math.cos(latitude * Math.PI / 180), point[1] * 110_540]);
+      const length = Math.hypot(end[0] - start[0], end[1] - start[1]);
+      totalMeters += length;
+      if (segmentIds.has(roadSegmentKey(road, index))) coveredMeters += length;
+    }
+  }
+  return { totalMeters: Math.round(totalMeters), coveredMeters: Math.round(coveredMeters) };
+}
+function renderStoredCoverageStats(segmentIds, streetLines) {
+  $("overallCoverage").textContent = coveragePercent(coverageFromStoredSegments(segmentIds, streetLines));
+  [["Grosse Pointe", "grossePointeCoverage"], ["Farms", "farmsCoverage"], ["Park", "parkCoverage"], ["Shores", "shoresCoverage"], ["Woods", "woodsCoverage"]].forEach(([city, target]) => {
+    $(target).textContent = coveragePercent(coverageFromStoredSegments(segmentIds, streetLines.filter(road => road.city === city)));
+  });
+}
 function renderCoverageStats(routePaths, streetLines) {
   const overall = previewCoverage(routePaths, streetLines);
   $("overallCoverage").textContent = coveragePercent(overall);
@@ -323,6 +347,25 @@ function renderCoverageStats(routePaths, streetLines) {
     $(target).textContent = coveragePercent(previewCoverage(routePaths, streetLines.filter(road => road.city === city)));
   });
   return overall;
+}
+async function persistCoveragePreview(coverage) {
+  if (!coverage.covered.size) return;
+  try {
+    await fetch("/api/v1/coverage-preview", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ segments: [...coverage.covered] }) });
+  } catch {
+    // The live route and its local coverage preview remain available even if
+    // the derived-history write is temporarily unavailable.
+  }
+}
+async function refreshCoverageHistory() {
+  try {
+    const [response, streetLines] = await Promise.all([fetch("/api/v1/coverage-preview", { cache: "no-store" }), roads()]);
+    if (!response.ok) throw new Error("coverage history unavailable");
+    const { segments } = await response.json();
+    renderStoredCoverageStats(new Set(segments), streetLines);
+  } catch {
+    // The map can still calculate a current-drive preview after it loads.
+  }
 }
 
 function projectRoute(points, width, height) {
@@ -433,6 +476,7 @@ async function loadSelectedRoute() {
     }
     const streetLines = await roads();
     const coverage = renderCoverageStats([route.coordinates], streetLines);
+    void persistCoveragePreview(coverage);
     drawRoutePaths([route.coordinates], streetLines, coverage);
     $("routeCount").textContent = `${route.point_count} points`;
     $("routeDetail").textContent = `Selected drive: ${readableDistance(route.sampled_distance_meters)} sampled over ${readableDuration(route.duration_seconds)} with ${route.point_count} points. Largest reporting gap: ${readableDistance(route.largest_gap_meters)}. Blue is the private route; green is the start and red is the finish.`;
@@ -462,6 +506,7 @@ $("loadHouseholdCoverage").addEventListener("click", async () => {
     if (!completedRoutes.length) throw new Error("no completed routes");
     const streetLines = await roads();
     const coverage = renderCoverageStats(completedRoutes.map(route => route.coordinates), streetLines);
+    void persistCoveragePreview(coverage);
     drawRoutePaths(completedRoutes.map(route => route.coordinates), streetLines, coverage);
     const drivenMeters = completedRoutes.reduce((total, route) => total + route.sampled_distance_meters, 0);
     $("routeCount").textContent = `${completedRoutes.length} drives`;
@@ -486,5 +531,6 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-wor
 refreshStatus();
 refreshProperties();
 refreshTrackerSignal();
+refreshCoverageHistory();
 activateDashboard("map");
 setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000);

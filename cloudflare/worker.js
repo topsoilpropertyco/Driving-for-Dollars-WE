@@ -145,6 +145,28 @@ async function recorderSessionList(env, email) {
   }) });
 }
 
+function validCoverageSegment(value) {
+  return typeof value === "string" && value.length > 0 && value.length <= 256 && /^[A-Za-z0-9 .:_-]+$/.test(value);
+}
+
+async function coveragePreview(request, env, email) {
+  if (request.method === "GET") {
+    const result = await env.DB.prepare(
+      "SELECT segment_id FROM coverage_preview_segments WHERE created_by_email = ? ORDER BY segment_id LIMIT 20000"
+    ).bind(email).all();
+    return json({ segments: (result.results || []).map(row => row.segment_id) });
+  }
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "invalid_request" }, 400); }
+  if (!body || typeof body !== "object" || !Array.isArray(body.segments) || body.segments.length > 20000 || !body.segments.every(validCoverageSegment)) return json({ error: "invalid_request" }, 400);
+  const now = new Date().toISOString();
+  const unique = [...new Set(body.segments)];
+  await env.DB.batch(unique.map(segment => env.DB.prepare(
+    "INSERT INTO coverage_preview_segments (created_by_email, segment_id, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?) ON CONFLICT(created_by_email, segment_id) DO UPDATE SET last_seen_at = excluded.last_seen_at"
+  ).bind(email, segment, now, now)));
+  return json({ stored_segments: unique.length });
+}
+
 function validUtc(value) {
   return typeof value === "string" && value.endsWith("Z") && !Number.isNaN(Date.parse(value));
 }
@@ -314,6 +336,7 @@ export default {
         return latestRecorderRoute(env, email, sessionId && sessionId.length <= 40 ? sessionId : null);
       }
       if (request.method === "GET" && url.pathname === "/api/v1/recorders/sessions") return recorderSessionList(env, email);
+      if ((request.method === "GET" || request.method === "POST") && url.pathname === "/api/v1/coverage-preview") return coveragePreview(request, env, email);
       if (request.method === "POST" && url.pathname === "/api/v1/actions") return actions(request, env);
       if (request.method === "POST" && url.pathname === "/api/v1/import-plans") return stageImportPlan(request, env);
       const advance = url.pathname.match(/^\/api\/v1\/import-plans\/([^/]+)\/advance$/);
