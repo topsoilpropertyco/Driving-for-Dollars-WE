@@ -122,13 +122,6 @@
       <p class="help" id="exportDetail" aria-live="polite">The export contains your saved addresses, household stage, action count, and last activity time—no recorder credentials or route coordinates.</p>
     </section>
 
-    <section class="card compact dashboard-panel" data-dashboard-panel="crm" id="freshCoverageCard" aria-labelledby="fresh-coverage-title">
-      <div class="card-heading"><div><p class="eyebrow">Coverage campaign</p><h2 id="fresh-coverage-title">Start fresh coverage</h2></div></div>
-      <p class="help">This does not delete any drive, tagged house, note, or previous coverage. It starts a new active scoreboard and map from this moment forward. Once started, this option disappears.</p>
-      <button class="secondary" id="startFreshCoverage" type="button">Start fresh coverage map</button>
-      <p class="help" id="freshCoverageDetail" aria-live="polite"></p>
-    </section>
-
     <section class="card compact dashboard-panel" data-dashboard-panel="crm" aria-labelledby="sync-title">
       <div class="card-heading"><div><p class="eyebrow">Automatic sync</p><h2 id="sync-title">Nothing to do</h2></div></div>
       <p id="syncDetail">Tagged homes sync automatically when your phone is online.</p>
@@ -183,6 +176,13 @@
         </label>
         <button class="secondary route-action" id="loadRoute" type="button">Show selected drive on map</button>
       </details>
+    </section>
+
+    <section class="card compact dashboard-panel" data-dashboard-panel="map" id="freshCoverageCard" aria-labelledby="fresh-coverage-title">
+      <div class="card-heading"><div><p class="eyebrow">Coverage campaign</p><h2 id="fresh-coverage-title">Start fresh coverage</h2></div></div>
+      <p class="help">This does not delete any drive, tagged house, note, or previous coverage. It starts a new active scoreboard and map from this moment forward. Once started, this option disappears.</p>
+      <button class="secondary" id="startFreshCoverage" type="button">Start fresh coverage map</button>
+      <p class="help" id="freshCoverageDetail" aria-live="polite"></p>
     </section>
 
     <section class="card compact dashboard-panel" data-dashboard-panel="pipeline" aria-labelledby="pipeline-title">
