@@ -294,7 +294,7 @@ $("captureForm").addEventListener("submit", async event => {
     toast("A confirmed address or current location is needed to save this home.");
   } finally {
     submit.disabled = false;
-    submit.textContent = "Save and Tag This House";
+    submit.textContent = "Save this house";
   }
 });
 $("propertyScore").addEventListener("input", () => { $("propertyScoreValue").value = $("propertyScore").value; $("propertyScoreValue").textContent = $("propertyScore").value; });
