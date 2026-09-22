@@ -25,20 +25,27 @@ function refreshStatus(message) {
   $("connection").classList.toggle("offline", !connected);
 }
 const TRACKER_FRESH_MS = 2 * 60 * 1000;
+function relativeAge(milliseconds) {
+  const seconds = Math.max(0, Math.round(milliseconds / 1000));
+  if (seconds < 60) return `${seconds} sec ago`;
+  const minutes = Math.round(seconds / 60);
+  return `${minutes} min ago`;
+}
 function renderTrackerSignal(status) {
   const lastSeen = status.latest_received_at ? Date.parse(status.latest_received_at) : NaN;
   const fresh = Number.isFinite(lastSeen) && Date.now() - lastSeen <= TRACKER_FRESH_MS;
+  const seenDetail = Number.isFinite(lastSeen) ? ` Last private report: ${relativeAge(Date.now() - lastSeen)}.` : "";
   const signal = $("trackerSignal");
   signal.dataset.state = fresh ? "active" : status.active_devices ? "quiet" : "off";
   if (fresh) {
     $("trackerState").textContent = "Tracking is working";
-    $("trackerDetail").textContent = "A private location report arrived within the last two minutes.";
+    $("trackerDetail").textContent = `A private location report arrived within the last two minutes.${seenDetail}`;
   } else if (!status.active_devices) {
     $("trackerState").textContent = "Recorder is not configured";
     $("trackerDetail").textContent = "Prepare this iPhone before starting a drive.";
   } else {
     $("trackerState").textContent = "No recent tracker signal";
-    $("trackerDetail").textContent = "Turn on Continuous tracking in Traccar and begin moving. This light turns green after a private report arrives.";
+    $("trackerDetail").textContent = `Turn on Continuous tracking in Traccar and begin moving. This light turns green after a private report arrives.${seenDetail}`;
   }
 }
 async function refreshTrackerSignal() {
