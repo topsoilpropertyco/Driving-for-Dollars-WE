@@ -10,6 +10,10 @@ const KINDS = new Set(["property_saved", "note_added", "stage_changed", "outreac
 const CONDITIONS = new Set(["pristine", "average", "needs_work", "abandoned"]);
 const TAG_PREFIX = "five_pointes_private_tag:";
 const OPTIONAL_TAG_SCORES = ["home_excitement_score", "neighborhood_excitement_score"];
+// This Worker is a single private household deployment. All Cloudflare Access
+// allow-listed members share recorder history and derived coverage; raw points
+// remain available only through this protected Worker.
+const HOUSEHOLD_SCOPE = "household";
 
 function validTagScores(value) {
   if (!value || !CONDITIONS.has(value.condition) || !Number.isInteger(value.score) || value.score < 1 || value.score > 10) return false;
@@ -77,12 +81,12 @@ async function bootstrapRecorder(request, env, email) {
   }, 201);
 }
 
-async function recorderStatus(env, email) {
+async function recorderStatus(env) {
   // Deliberately return aggregate delivery health only. Location data stays in
   // the isolated recorder store and is never exposed to the phone dashboard.
   const row = await env.DB.prepare(
-    "SELECT COUNT(DISTINCT d.device_id) AS active_devices, COUNT(p.device_id) AS points_received, MAX(p.received_at) AS latest_received_at, MAX(p.recorded_at) AS latest_recorded_at FROM recorder_devices d LEFT JOIN recorder_points p ON p.device_id = d.device_id WHERE d.created_by_email = ? AND d.revoked_at IS NULL"
-  ).bind(email).first();
+    "SELECT COUNT(DISTINCT d.device_id) AS active_devices, COUNT(p.device_id) AS points_received, MAX(p.received_at) AS latest_received_at, MAX(p.recorded_at) AS latest_recorded_at FROM recorder_devices d LEFT JOIN recorder_points p ON p.device_id = d.device_id WHERE d.revoked_at IS NULL"
+  ).bind().first();
   return json({
     active_devices: Number(row?.active_devices || 0),
     points_received: Number(row?.points_received || 0),
@@ -93,30 +97,45 @@ async function recorderStatus(env, email) {
 
 const ROUTE_SESSION_GAP_MS = 15 * 60 * 1000;
 
-async function recorderRoutePoints(env, email) {
+async function recorderRoutePoints(env) {
   const result = await env.DB.prepare(
-    "SELECT p.recorded_at, p.latitude, p.longitude FROM recorder_points p JOIN recorder_devices d ON d.device_id = p.device_id WHERE d.created_by_email = ? AND d.revoked_at IS NULL ORDER BY p.recorded_at DESC LIMIT 5000"
-  ).bind(email).all();
-  return (result.results || []).reverse().filter(row =>
+    "SELECT p.recorded_at, p.latitude, p.longitude, d.device_id FROM recorder_points p JOIN recorder_devices d ON d.device_id = p.device_id WHERE d.revoked_at IS NULL ORDER BY p.recorded_at ASC, d.device_id ASC LIMIT 5000"
+  ).bind().all();
+  return (result.results || []).filter(row =>
     typeof row.recorded_at === "string" && Number.isFinite(Number(row.latitude)) && Number.isFinite(Number(row.longitude))
   );
 }
 
 function recorderSessions(rows) {
-  const sessions = [];
-  let current = [];
+  const byDevice = new Map();
   for (const row of rows) {
-    const previous = current.at(-1);
-    const previousTime = previous ? Date.parse(previous.recorded_at) : NaN;
-    const currentTime = Date.parse(row.recorded_at);
-    if (current.length && (!Number.isFinite(previousTime) || !Number.isFinite(currentTime) || currentTime - previousTime > ROUTE_SESSION_GAP_MS)) {
-      sessions.push(current);
-      current = [];
-    }
-    current.push(row);
+    if (!byDevice.has(row.device_id)) byDevice.set(row.device_id, []);
+    byDevice.get(row.device_id).push(row);
   }
-  if (current.length) sessions.push(current);
-  return sessions;
+  const sessions = [];
+  for (const deviceRows of byDevice.values()) {
+    deviceRows.sort((first, second) => Date.parse(first.recorded_at) - Date.parse(second.recorded_at));
+    let current = [];
+    for (const row of deviceRows) {
+      const previous = current.at(-1);
+      const previousTime = previous ? Date.parse(previous.recorded_at) : NaN;
+      const currentTime = Date.parse(row.recorded_at);
+      if (current.length && (!Number.isFinite(previousTime) || !Number.isFinite(currentTime) || currentTime - previousTime > ROUTE_SESSION_GAP_MS)) {
+        sessions.push(current);
+        current = [];
+      }
+      current.push(row);
+    }
+    if (current.length) sessions.push(current);
+  }
+  return sessions.sort((first, second) => Date.parse(first[0].recorded_at) - Date.parse(second[0].recorded_at));
+}
+
+function recorderSessionId(session) {
+  const text = `${session[0]?.device_id || ""}:${session[0]?.recorded_at || ""}`;
+  let hash = 2_166_136_261;
+  for (let index = 0; index < text.length; index += 1) { hash ^= text.charCodeAt(index); hash = Math.imul(hash, 16_777_619); }
+  return `drive-${(hash >>> 0).toString(36)}-${Date.parse(session[0]?.recorded_at || "").toString(36)}`;
 }
 
 function metersBetween(first, second) {
@@ -139,7 +158,7 @@ function routePayload(session) {
   const started = Date.parse(session[0]?.recorded_at || "");
   const ended = Date.parse(session.at(-1)?.recorded_at || "");
   return {
-    session_id: session[0]?.recorded_at || null,
+    session_id: session.length ? recorderSessionId(session) : null,
     point_count: session.length,
     started_at: session[0]?.recorded_at || null,
     ended_at: session.at(-1)?.recorded_at || null,
@@ -151,16 +170,16 @@ function routePayload(session) {
   };
 }
 
-async function latestRecorderRoute(env, email, requestedSessionId = null) {
-  // Coordinates are returned only to the authenticated household member who
-  // created the recorder. Nothing here is served by the public ingress Worker.
-  const sessions = recorderSessions(await recorderRoutePoints(env, email));
-  const session = requestedSessionId ? sessions.find(candidate => candidate[0]?.recorded_at === requestedSessionId) : sessions.at(-1);
+async function latestRecorderRoute(env, requestedSessionId = null) {
+  // Coordinates are returned only to an authenticated household member. Device
+  // identities never leave this Worker, including when two phones overlap.
+  const sessions = recorderSessions(await recorderRoutePoints(env));
+  const session = requestedSessionId ? sessions.find(candidate => recorderSessionId(candidate) === requestedSessionId) : sessions.at(-1);
   return json(routePayload(session || []));
 }
 
-async function recorderSessionList(env, email) {
-  const sessions = recorderSessions(await recorderRoutePoints(env, email));
+async function recorderSessionList(env) {
+  const sessions = recorderSessions(await recorderRoutePoints(env));
   return json({ sessions: sessions.slice(-20).reverse().map(session => {
     const payload = routePayload(session);
     return { session_id: payload.session_id, point_count: payload.point_count, started_at: payload.started_at, ended_at: payload.ended_at, sampled_distance_meters: payload.sampled_distance_meters, largest_gap_meters: payload.largest_gap_meters, duration_seconds: payload.duration_seconds };
@@ -206,11 +225,11 @@ async function googlePlaces(request, env, email) {
   return json({ address: body.formattedAddress.slice(0, 256), latitude: body.location.latitude, longitude: body.location.longitude });
 }
 
-async function coveragePreview(request, env, email) {
+async function coveragePreview(request, env) {
   if (request.method === "GET") {
     const result = await env.DB.prepare(
-      "SELECT segment_id, last_seen_at FROM coverage_preview_segments WHERE created_by_email = ? ORDER BY segment_id LIMIT 20001"
-    ).bind(email).all();
+      "SELECT segment_id, MAX(last_seen_at) AS last_seen_at FROM coverage_preview_segments GROUP BY segment_id ORDER BY segment_id LIMIT 20001"
+    ).bind().all();
     const rows = result.results || [];
     const campaign = rows.find(row => row.segment_id === "__five_pointes_campaign_start__");
     const entries = rows.filter(row => row.segment_id !== "__five_pointes_campaign_start__").map(row => ({ segment_id: row.segment_id, last_seen_at: row.last_seen_at }));
@@ -223,10 +242,10 @@ async function coveragePreview(request, env, email) {
   const unique = [...new Set(body.segments)];
   const statements = unique.map(segment => env.DB.prepare(
     "INSERT INTO coverage_preview_segments (created_by_email, segment_id, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?) ON CONFLICT(created_by_email, segment_id) DO UPDATE SET last_seen_at = excluded.last_seen_at"
-  ).bind(email, segment, now, now));
+  ).bind(HOUSEHOLD_SCOPE, segment, now, now));
   if (body.start_fresh_campaign) statements.push(env.DB.prepare(
     "INSERT INTO coverage_preview_segments (created_by_email, segment_id, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?) ON CONFLICT(created_by_email, segment_id) DO UPDATE SET last_seen_at = excluded.last_seen_at"
-  ).bind(email, "__five_pointes_campaign_start__", now, now));
+  ).bind(HOUSEHOLD_SCOPE, "__five_pointes_campaign_start__", now, now));
   if (statements.length) await env.DB.batch(statements);
   return json({ stored_segments: unique.length, campaign_started_at: body.start_fresh_campaign ? now : null });
 }
@@ -430,13 +449,13 @@ export default {
     try {
       if (request.method === "GET" && url.pathname === "/api/health") return json({ status: "private-ready" });
       if (request.method === "POST" && url.pathname === "/api/v1/recorders/bootstrap") return bootstrapRecorder(request, env, email);
-      if (request.method === "GET" && url.pathname === "/api/v1/recorders/status") return recorderStatus(env, email);
+      if (request.method === "GET" && url.pathname === "/api/v1/recorders/status") return recorderStatus(env);
       if (request.method === "GET" && url.pathname === "/api/v1/recorders/latest-route") {
         const sessionId = url.searchParams.get("session");
-        return latestRecorderRoute(env, email, sessionId && sessionId.length <= 40 ? sessionId : null);
+        return latestRecorderRoute(env, sessionId && sessionId.length <= 80 ? sessionId : null);
       }
-      if (request.method === "GET" && url.pathname === "/api/v1/recorders/sessions") return recorderSessionList(env, email);
-      if ((request.method === "GET" || request.method === "POST") && url.pathname === "/api/v1/coverage-preview") return coveragePreview(request, env, email);
+      if (request.method === "GET" && url.pathname === "/api/v1/recorders/sessions") return recorderSessionList(env);
+      if ((request.method === "GET" || request.method === "POST") && url.pathname === "/api/v1/coverage-preview") return coveragePreview(request, env);
       if (request.method === "GET" && (url.pathname === "/api/v1/address-autocomplete" || url.pathname === "/api/v1/address-place")) return googlePlaces(request, env, email);
       if (request.method === "POST" && url.pathname === "/api/v1/actions") return actions(request, env);
       if (request.method === "POST" && url.pathname === "/api/v1/import-plans") return stageImportPlan(request, env);

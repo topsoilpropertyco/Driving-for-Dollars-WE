@@ -9,7 +9,7 @@ class CoverageDb {
   async batch(statements) { return Promise.all(statements.map(statement => statement.execute())); }
 }
 
-const env = { DB: new CoverageDb(), ALLOWED_EMAILS: "home@example.test" };
+const env = { DB: new CoverageDb(), ALLOWED_EMAILS: "home@example.test,claire@example.test" };
 const headers = { "Cf-Access-Authenticated-User-Email": "home@example.test", "content-type": "application/json" };
 const start = await worker.fetch(new Request("https://private.example.test/api/v1/coverage-preview", { method: "POST", headers, body: JSON.stringify({ segments: [], start_fresh_campaign: true }) }), env);
 assert.equal(start.status, 200);
@@ -20,4 +20,8 @@ const body = await history.json();
 assert.deepEqual(body.segments, ["old:1"]);
 assert.equal(body.entries[0].last_seen_at, "2026-09-01T00:00:00.000Z");
 assert.match(body.campaign_started_at, /^\d{4}-/);
+
+const claireHistory = await worker.fetch(new Request("https://private.example.test/api/v1/coverage-preview", { headers: { "Cf-Access-Authenticated-User-Email": "claire@example.test" } }), env);
+assert.equal(claireHistory.status, 200);
+assert.deepEqual(await claireHistory.json(), body);
 console.log("coverage campaign contract: passed");

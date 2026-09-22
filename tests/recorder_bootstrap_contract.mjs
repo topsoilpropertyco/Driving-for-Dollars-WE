@@ -24,7 +24,7 @@ class FakeBootstrapD1 {
 const db = new FakeBootstrapD1();
 const env = {
   DB: db,
-  ALLOWED_EMAILS: "seth@example.test",
+  ALLOWED_EMAILS: "seth@example.test,claire@example.test",
   RECORDER_INGEST_URL: "https://ingest.example/",
 };
 const headers = { "content-type": "application/json", "Cf-Access-Authenticated-User-Email": "seth@example.test" };
@@ -41,6 +41,13 @@ assert.equal(db.devices.length, 1);
 assert.equal(db.devices[0][0], body.device_id);
 assert.match(db.devices[0][1], /^[a-f0-9]{64}$/);
 assert.equal(db.devices[0][2], "seth@example.test");
+
+const claireHeaders = { "content-type": "application/json", "Cf-Access-Authenticated-User-Email": "claire@example.test" };
+const claireCreated = await worker.fetch(new Request("https://private.example/api/v1/recorders/bootstrap", { method: "POST", headers: claireHeaders, body: "{}" }), env);
+assert.equal(claireCreated.status, 201);
+assert.equal(db.devices.length, 2);
+assert.equal(db.devices[1][2], "claire@example.test");
+assert.notEqual(db.devices[0][0], db.devices[1][0]);
 
 const blocked = await worker.fetch(new Request("https://private.example/api/v1/recorders/bootstrap", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }), env);
 assert.equal(blocked.status, 401);
