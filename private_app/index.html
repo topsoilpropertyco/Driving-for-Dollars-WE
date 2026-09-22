@@ -28,9 +28,9 @@
 
     <nav class="dashboard-nav" aria-label="Five Pointes sections">
       <button class="active" type="button" data-dashboard-view="map">Map</button>
-      <button type="button" data-dashboard-view="properties">Properties</button>
+      <button type="button" data-dashboard-view="properties">Tag homes</button>
       <button type="button" data-dashboard-view="pipeline">Pipeline</button>
-      <button type="button" data-dashboard-view="crm">CRM</button>
+      <button type="button" data-dashboard-view="crm">Workspace</button>
     </nav>
 
     <section class="card compact drive-guide dashboard-panel" data-dashboard-panel="crm" aria-labelledby="drive-guide-title">
@@ -53,34 +53,33 @@
       <p class="help">This drive begins outside the bundled Grosse Pointe street area. Private recording and route playback still work for the whole drive. Green coverage preview appears only where the bundled Grosse Pointe road geometry is available.</p>
     </section>
 
-    <section class="card dashboard-panel" data-dashboard-panel="crm" aria-labelledby="capture-title">
-      <div class="card-heading"><div><p class="eyebrow">Quick capture</p><h2 id="capture-title">Save an observation</h2></div><span class="pill" id="queueCount">0 queued</span></div>
+    <section class="card dashboard-panel" data-dashboard-panel="properties" aria-labelledby="capture-title">
+      <div class="card-heading"><div><p class="eyebrow">Parked or passenger only</p><h2 id="capture-title">Tag this house</h2></div><span class="pill" id="queueCount">0 queued</span></div>
       <form id="captureForm">
-        <label for="propertyIdentity">Property identity</label>
-        <input id="propertyIdentity" name="propertyIdentity" autocomplete="off" inputmode="text" placeholder="Parcel ID or saved property ID" required maxlength="256">
-        <p class="help">Use the property ID supplied by the private map. Never enter an owner name, phone number, or email here.</p>
+        <label for="propertyIdentity">House label <span>optional</span></label>
+        <input id="propertyIdentity" name="propertyIdentity" autocomplete="off" inputmode="text" placeholder="e.g., blue shutters on corner" maxlength="256">
+        <p class="help">Leave this blank and Five Pointes creates a private label. Do not enter an owner name, phone number, or email.</p>
 
-        <label for="stage">Where is it now?</label>
-        <select id="stage" name="stage">
-          <option value="no_outreach">Saved / no outreach</option>
-          <option value="reached_out">Reached out</option>
-          <option value="waiting_for_reply">Haven’t heard back</option>
-          <option value="in_conversation">In conversation</option>
-          <option value="contractor_offer">Contractor offer</option>
-          <option value="realtor_referral">Given to realtor</option>
-          <option value="closed">Closed</option>
-          <option value="archived">Passed / archived</option>
-        </select>
+        <fieldset class="condition-picker"><legend>Condition</legend>
+          <label><input type="radio" name="condition" value="pristine" checked> Pristine</label>
+          <label><input type="radio" name="condition" value="average"> Average</label>
+          <label><input type="radio" name="condition" value="needs_work"> Needs work</label>
+          <label><input type="radio" name="condition" value="abandoned"> Abandoned</label>
+        </fieldset>
+        <label for="propertyScore">House score <output id="propertyScoreValue" for="propertyScore">5</output> / 10</label>
+        <input id="propertyScore" name="propertyScore" type="range" min="1" max="10" value="5" step="1">
+        <label class="location-choice"><input id="captureLocation" name="captureLocation" type="checkbox"> Add a private map star at my current location</label>
+        <p class="help">Only choose this while parked or when a passenger is using the phone. The location stays in this protected household app.</p>
 
         <label for="note">Quick note <span>optional</span></label>
         <textarea id="note" name="note" maxlength="1000" placeholder="What stood out about the house or block?"></textarea>
-        <button class="primary" id="captureSubmit" type="submit">Save observation</button>
+        <button class="primary" id="captureSubmit" type="submit">Save tagged house</button>
       </form>
     </section>
 
     <section class="card compact dashboard-panel" data-dashboard-panel="properties" aria-labelledby="properties-title">
-      <div class="card-heading"><div><p class="eyebrow">Household CRM</p><h2 id="properties-title">Saved homes</h2></div><span class="pill" id="propertyCount">Checking…</span></div>
-      <p class="help" id="propertiesDetail">Only homes saved by this household appear here. No external property or owner data has been imported.</p>
+      <div class="card-heading"><div><p class="eyebrow">Saved homes</p><h2 id="properties-title">Your tagged houses</h2></div><span class="pill" id="propertyCount">Checking…</span></div>
+      <p class="help" id="propertiesDetail">Your tagged homes are private to this household. Map stars appear only where you deliberately saved a current location.</p>
       <div class="property-filters">
         <input id="propertySearch" type="search" autocomplete="off" placeholder="Search saved property IDs" aria-label="Search saved property IDs">
         <select id="propertyStageFilter" aria-label="Filter saved homes by stage"><option value="">All stages</option><option value="no_outreach">Saved / no outreach</option><option value="reached_out">Reached out</option><option value="waiting_for_reply">Haven’t heard back</option><option value="in_conversation">In conversation</option><option value="contractor_offer">Contractor offer</option><option value="realtor_referral">Given to realtor</option><option value="closed">Closed</option><option value="archived">Passed / archived</option></select>
@@ -144,7 +143,19 @@
     </section>
 
     <section class="card compact dashboard-panel" data-dashboard-panel="map" aria-labelledby="route-title">
-      <div class="card-heading"><div><p class="eyebrow">Private drive map</p><h2 id="route-title">Latest route</h2></div><span class="pill" id="routeCount">Not loaded</span></div>
+      <div class="card-heading"><div><p class="eyebrow">Five Pointes driving coverage</p><h2 id="route-title">Your coverage map</h2></div><span class="pill" id="routeCount">Private</span></div>
+      <div class="map-city-picker" role="group" aria-label="Choose map area">
+        <button class="active" data-map-city="all" type="button">All five</button>
+        <button data-map-city="Grosse Pointe" type="button">Grosse Pointe</button>
+        <button data-map-city="Farms" type="button">Farms</button>
+        <button data-map-city="Park" type="button">Park</button>
+        <button data-map-city="Shores" type="button">Shores</button>
+        <button data-map-city="Woods" type="button">Woods</button>
+      </div>
+      <canvas class="route-map" id="routeMap" width="600" height="360" role="img" aria-label="Interactive map of five pointes street coverage. Bright green streets are covered candidate segments, muted blue-gray streets are not yet covered, and gold stars are saved homes with a private map location."></canvas>
+      <p id="routeDetail">Drag to pan. Pinch or scroll to zoom. Bright green is already covered; blue-gray is still to cover; gold stars are tagged homes.</p>
+      <div class="map-legend" aria-label="Map legend"><span class="covered">Covered</span><span class="uncovered">Still to cover</span><span class="saved-home">★ Tagged home</span></div>
+      <h3 class="scoreboard-title">Overall driving scoreboard</h3>
       <div class="coverage-stats" aria-label="Private coverage summary">
         <div><strong id="overallCoverage">—</strong><span>overall street preview</span></div>
         <div><strong id="grossePointeCoverage">—</strong><span>Grosse Pointe</span></div>
@@ -153,14 +164,15 @@
         <div><strong id="shoresCoverage">—</strong><span>Shores</span></div>
         <div><strong id="woodsCoverage">—</strong><span>Woods</span></div>
       </div>
-      <p id="routeDetail">Your route is visible only after signing in to this household app. No third-party map service receives it.</p>
-      <p class="help" id="coverageDetail">Covered street segments will be highlighted after a route loads. You can also make a private household-wide preview across completed drives; neither view is a final canonical coverage total.</p>
-      <label class="route-selector" id="routeSelector" for="routeSession" hidden>Choose a completed drive
-        <select id="routeSession" aria-label="Completed private drives"></select>
-      </label>
-      <canvas class="route-map" id="routeMap" width="600" height="360" role="img" aria-label="Map of the latest private drive"></canvas>
-      <button class="secondary" id="loadRoute" type="button">Show latest route</button>
-      <button class="secondary route-action" id="loadHouseholdCoverage" type="button">Show household coverage</button>
+      <p class="help" id="coverageDetail">Coverage is a private, 30 m street-segment preview based on completed drives—not a claim that every parcel has been seen.</p>
+      <details class="drive-history" id="driveHistory">
+        <summary>Historical drives and route detail</summary>
+        <p class="help">Use this only when you want to inspect an individual completed drive. The main map stays focused on overall coverage.</p>
+        <label class="route-selector" id="routeSelector" for="routeSession">Choose a completed drive
+          <select id="routeSession" aria-label="Completed private drives"></select>
+        </label>
+        <button class="secondary route-action" id="loadRoute" type="button">Show selected drive on map</button>
+      </details>
     </section>
 
     <section class="card compact dashboard-panel" data-dashboard-panel="pipeline" aria-labelledby="pipeline-title">

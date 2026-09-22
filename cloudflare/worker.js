@@ -6,7 +6,19 @@ const STAGES = new Set([
   "no_outreach", "reached_out", "waiting_for_reply", "in_conversation",
   "contractor_offer", "realtor_referral", "closed", "archived",
 ]);
-const KINDS = new Set(["property_saved", "note_added", "stage_changed", "outreach_logged"]);
+const KINDS = new Set(["property_saved", "note_added", "stage_changed", "outreach_logged", "property_tagged"]);
+const CONDITIONS = new Set(["pristine", "average", "needs_work", "abandoned"]);
+const TAG_PREFIX = "five_pointes_private_tag:";
+
+function privateTag(payload) {
+  if (!payload || typeof payload.note !== "string" || !payload.note.startsWith(TAG_PREFIX)) return null;
+  try {
+    const value = JSON.parse(payload.note.slice(TAG_PREFIX.length));
+    if (!value || !CONDITIONS.has(value.condition) || !Number.isInteger(value.score) || value.score < 1 || value.score > 10) return null;
+    if (("latitude" in value || "longitude" in value) && (!Number.isFinite(value.latitude) || !Number.isFinite(value.longitude) || value.latitude < -90 || value.latitude > 90 || value.longitude < -180 || value.longitude > 180)) return null;
+    return value;
+  } catch { return null; }
+}
 const IMPORT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function json(value, status = 200) {
@@ -182,6 +194,13 @@ function validateAction(value) {
   if (value.kind === "property_saved") return Object.keys(value.payload).length === 0;
   if (value.kind === "stage_changed") return Object.keys(value.payload).length === 1 && STAGES.has(value.payload.stage);
   if (value.kind === "note_added") return Object.keys(value.payload).length === 1 && typeof value.payload.note === "string" && value.payload.note.trim();
+  if (value.kind === "property_tagged") {
+    const fields = Object.keys(value.payload).sort();
+    const locationFields = fields.join(",") === "condition,latitude,longitude,score";
+    const tagFields = fields.join(",") === "condition,score";
+    return (tagFields || locationFields) && CONDITIONS.has(value.payload.condition) && Number.isInteger(value.payload.score) && value.payload.score >= 1 && value.payload.score <= 10
+      && (!locationFields || (Number.isFinite(value.payload.latitude) && Number.isFinite(value.payload.longitude) && value.payload.latitude >= -90 && value.payload.latitude <= 90 && value.payload.longitude >= -180 && value.payload.longitude <= 180));
+  }
   return Object.keys(value.payload).length === 1 && typeof value.payload.method === "string" && value.payload.method.trim();
 }
 
@@ -293,14 +312,26 @@ async function property(identity, env) {
   ).bind(identity).all();
   let stage = "no_outreach";
   const notes = [], outreach_methods = [], timeline = [];
+  let condition = null, score = null, location = null;
   for (const row of rows.results) {
     const payload = JSON.parse(row.payload_json);
     if (row.kind === "stage_changed") stage = payload.stage;
-    if (row.kind === "note_added") notes.push(payload.note);
+    const tag = row.kind === "note_added" ? privateTag(payload) : null;
+    if (row.kind === "note_added" && !tag) notes.push(payload.note);
     if (row.kind === "outreach_logged") outreach_methods.push(payload.method);
+    if (row.kind === "property_tagged") {
+      condition = payload.condition;
+      score = payload.score;
+      location = Number.isFinite(payload.latitude) && Number.isFinite(payload.longitude) ? [payload.longitude, payload.latitude] : location;
+    }
+    if (tag) {
+      condition = tag.condition;
+      score = tag.score;
+      location = Number.isFinite(tag.latitude) && Number.isFinite(tag.longitude) ? [tag.longitude, tag.latitude] : location;
+    }
     timeline.push({ event_id: row.event_id, occurred_at: row.occurred_at, kind: row.kind, payload });
   }
-  return json({ summary: { property_identity: identity, saved: timeline.some(item => item.kind === "property_saved"), stage, notes, outreach_methods, action_count: timeline.length }, timeline });
+  return json({ summary: { property_identity: identity, saved: timeline.some(item => item.kind === "property_saved"), stage, notes, outreach_methods, condition, score, location, action_count: timeline.length }, timeline });
 }
 
 async function properties(env) {
@@ -311,11 +342,23 @@ async function properties(env) {
   ).bind().all();
   const summaries = new Map();
   for (const row of rows.results || []) {
-    const current = summaries.get(row.property_identity) || { property_identity: row.property_identity, saved: false, stage: "no_outreach", action_count: 0, last_activity_at: row.occurred_at };
+    const current = summaries.get(row.property_identity) || { property_identity: row.property_identity, saved: false, stage: "no_outreach", condition: null, score: null, location: null, action_count: 0, last_activity_at: row.occurred_at };
     current.saved ||= row.kind === "property_saved";
     current.action_count += 1;
     current.last_activity_at = row.occurred_at;
     if (row.kind === "stage_changed") current.stage = JSON.parse(row.payload_json).stage;
+    const payload = JSON.parse(row.payload_json);
+    const tag = row.kind === "note_added" ? privateTag(payload) : null;
+    if (row.kind === "property_tagged") {
+      current.condition = payload.condition;
+      current.score = payload.score;
+      if (Number.isFinite(payload.latitude) && Number.isFinite(payload.longitude)) current.location = [payload.longitude, payload.latitude];
+    }
+    if (tag) {
+      current.condition = tag.condition;
+      current.score = tag.score;
+      if (Number.isFinite(tag.latitude) && Number.isFinite(tag.longitude)) current.location = [tag.longitude, tag.latitude];
+    }
     summaries.set(row.property_identity, current);
   }
   return json({ properties: [...summaries.values()].filter(summary => summary.saved).sort((first, second) => second.last_activity_at.localeCompare(first.last_activity_at)) });

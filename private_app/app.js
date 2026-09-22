@@ -90,20 +90,31 @@ const stageNames = {
   no_outreach: "Saved / no outreach", reached_out: "Reached out", waiting_for_reply: "Haven’t heard back", in_conversation: "In conversation",
   contractor_offer: "Contractor offer", realtor_referral: "Given to realtor", closed: "Closed", archived: "Passed / archived",
 };
+const PRIVATE_TAG_PREFIX = "five_pointes_private_tag:";
+function privateTagNote(tag) { return `${PRIVATE_TAG_PREFIX}${JSON.stringify(tag)}`; }
+function tagFromTimeline(item) {
+  if (item.kind !== "note_added" || typeof item.payload.note !== "string" || !item.payload.note.startsWith(PRIVATE_TAG_PREFIX)) return null;
+  try { return JSON.parse(item.payload.note.slice(PRIVATE_TAG_PREFIX.length)); } catch { return null; }
+}
 function timelineLabel(item) {
   if (item.kind === "property_saved") return "Saved";
+  const tag = tagFromTimeline(item);
+  if (tag) return `${conditionNames[tag.condition] || "Tagged"} · ${tag.score}/10${Number.isFinite(tag.latitude) ? " · map star" : ""}`;
+  if (item.kind === "property_tagged") return `${conditionNames[item.payload.condition] || "Tagged"} · ${item.payload.score}/10${Number.isFinite(item.payload.latitude) ? " · map star" : ""}`;
   if (item.kind === "stage_changed") return `Stage: ${stageNames[item.payload.stage] || "Updated"}`;
   if (item.kind === "note_added") return `Note: ${item.payload.note}`;
   if (item.kind === "outreach_logged") return `Outreach: ${item.payload.method}`;
   return "Updated";
 }
+const conditionNames = { pristine: "Pristine", average: "Average", needs_work: "Needs work", abandoned: "Abandoned" };
 async function showProperty(identity) {
   try {
     const response = await fetch(`/api/v1/properties/${encodeURIComponent(identity)}`, { cache: "no-store" });
     if (!response.ok) throw new Error("property unavailable");
     const property = await response.json();
     $("selectedProperty").textContent = property.summary.property_identity;
-    $("selectedPropertySummary").textContent = `${stageNames[property.summary.stage] || "Saved"} · ${property.summary.action_count} saved action${property.summary.action_count === 1 ? "" : "s"}`;
+    const tag = property.summary.condition ? `${conditionNames[property.summary.condition]} · ${property.summary.score}/10` : "Not yet rated";
+    $("selectedPropertySummary").textContent = `${tag} · ${stageNames[property.summary.stage] || "Saved"} · ${property.summary.action_count} saved action${property.summary.action_count === 1 ? "" : "s"}`;
     $("selectedPropertyStage").value = property.summary.stage || "no_outreach";
     $("selectedPropertyTimeline").replaceChildren(...property.timeline.map(item => {
       const entry = document.createElement("li");
@@ -141,7 +152,7 @@ function renderProperties() {
     const identity = document.createElement("strong");
     identity.textContent = property.property_identity;
     const detail = document.createElement("span");
-    detail.textContent = `${stageNames[property.stage] || "Saved"} · ${property.action_count} action${property.action_count === 1 ? "" : "s"}`;
+    detail.textContent = `${property.condition ? `${conditionNames[property.condition]} · ${property.score}/10` : "Not yet rated"} · ${stageNames[property.stage] || "Saved"}`;
     item.append(identity, detail);
     item.addEventListener("click", () => showProperty(property.property_identity));
     return item;
@@ -168,8 +179,9 @@ async function refreshProperties() {
     $("propertyCount").textContent = `${properties.length} saved`;
     renderProperties();
     renderPipeline();
-    if (!properties.length) $("propertiesDetail").textContent = "No saved homes yet. Add one with Quick capture while parked.";
-    else $("propertiesDetail").textContent = "Search or filter your household captures below.";
+    drawCoverageMap();
+    if (!properties.length) $("propertiesDetail").textContent = "No tagged homes yet. Add one while parked or as a passenger.";
+    else $("propertiesDetail").textContent = "Search, filter, or open a tagged house to update it.";
   } catch {
     $("propertyCount").textContent = "Unavailable";
     $("propertiesDetail").textContent = "Saved homes are unavailable right now. Your local capture queue is unchanged.";
@@ -180,30 +192,42 @@ $("captureForm").addEventListener("submit", async event => {
   event.preventDefault();
   const submit = $("captureSubmit");
   if (submit.disabled) return;
-  const identity = $("propertyIdentity").value.trim();
-  const stage = $("stage").value;
+  const identity = $("propertyIdentity").value.trim() || `Tagged home ${new Date().toLocaleString()}`;
   const note = $("note").value.trim();
-  if (!identity || !stages.has(stage)) return toast("Enter a valid property ID and stage.");
   submit.disabled = true;
-  submit.textContent = "Saving…";
+  submit.textContent = "Saving tag…";
   try {
+    const condition = document.querySelector('input[name="condition"]:checked')?.value;
+    const tag = { condition, score: Number($("propertyScore").value) };
+    if (!condition || !Number.isInteger(tag.score)) throw new Error("invalid tag");
+    if ($("captureLocation").checked) {
+      const position = await new Promise((resolve, reject) => navigator.geolocation?.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12_000, maximumAge: 30_000 }) || reject(new Error("location unavailable")));
+      tag.latitude = position.coords.latitude;
+      tag.longitude = position.coords.longitude;
+    }
     enqueue(action("property_saved", identity, {}));
-    enqueue(action("stage_changed", identity, { stage }));
+    enqueue(action("note_added", identity, { note: privateTagNote(tag) }));
     if (note) enqueue(action("note_added", identity, { note }));
     $("captureForm").reset();
+    $("propertyScore").value = "5";
+    $("propertyScoreValue").value = "5";
+    $("propertyScoreValue").textContent = "5";
     refreshStatus();
-    toast("Captured safely. Ready for the next home.");
+    toast("Tagged house saved. Ready for the next one.");
     await sync();
+  } catch {
+    toast($("captureLocation").checked ? "Could not get this location. Check permission, then try while parked." : "Could not save this house tag yet.");
   } finally {
     submit.disabled = false;
-    submit.textContent = "Save observation";
+    submit.textContent = "Save tagged house";
   }
 });
+$("propertyScore").addEventListener("input", () => { $("propertyScoreValue").value = $("propertyScore").value; $("propertyScoreValue").textContent = $("propertyScore").value; });
 $("syncNow").addEventListener("click", sync);
 function activateDashboard(view) {
   document.querySelectorAll("[data-dashboard-view]").forEach(item => item.classList.toggle("active", item.dataset.dashboardView === view));
   document.querySelectorAll("[data-dashboard-panel]").forEach(panel => { panel.hidden = panel.dataset.dashboardPanel !== view; });
-  if (view === "map") loadSelectedRoute();
+  if (view === "map") { drawCoverageMap(); refreshCoverageFromCompletedDrives(); }
   if (view === "properties" || view === "pipeline") refreshProperties();
 }
 document.querySelectorAll("[data-dashboard-view]").forEach(button => button.addEventListener("click", () => activateDashboard(button.dataset.dashboardView)));
@@ -362,9 +386,65 @@ async function refreshCoverageHistory() {
     const [response, streetLines] = await Promise.all([fetch("/api/v1/coverage-preview", { cache: "no-store" }), roads()]);
     if (!response.ok) throw new Error("coverage history unavailable");
     const { segments } = await response.json();
-    renderStoredCoverageStats(new Set(segments), streetLines);
+    for (const segment of segments) storedCoverageSegments.add(segment);
+    renderStoredCoverageStats(storedCoverageSegments, streetLines);
+    drawCoverageMap();
   } catch {
     // The map can still calculate a current-drive preview after it loads.
+  }
+}
+
+let storedCoverageSegments = new Set();
+let selectedMapCity = "all";
+let selectedRoutePaths = [];
+const mapViewport = { scale: 1, x: 0, y: 0 };
+const activePointers = new Map();
+
+function coverageMapBounds(roadLines) {
+  const points = roadLines.flatMap(road => road.coordinates);
+  const longitudes = points.map(point => point[0]), latitudes = points.map(point => point[1]);
+  const padX = Math.max((Math.max(...longitudes) - Math.min(...longitudes)) * 0.06, 0.0005);
+  const padY = Math.max((Math.max(...latitudes) - Math.min(...latitudes)) * 0.06, 0.0005);
+  return { west: Math.min(...longitudes) - padX, east: Math.max(...longitudes) + padX, south: Math.min(...latitudes) - padY, north: Math.max(...latitudes) + padY };
+}
+function coverageMapProjector(bounds, width, height) {
+  const spanX = Math.max(bounds.east - bounds.west, 0.0001), spanY = Math.max(bounds.north - bounds.south, 0.0001);
+  const scale = Math.min(width / spanX, height / spanY), usedWidth = spanX * scale, usedHeight = spanY * scale;
+  return point => [(width - usedWidth) / 2 + (point[0] - bounds.west) * scale, (height - usedHeight) / 2 + (bounds.north - point[1]) * scale];
+}
+function transformedMapPoint(point, width, height) { return [width / 2 + (point[0] - width / 2) * mapViewport.scale + mapViewport.x, height / 2 + (point[1] - height / 2) * mapViewport.scale + mapViewport.y]; }
+function drawMapStar(context, x, y) {
+  context.save(); context.translate(x, y); context.beginPath();
+  for (let index = 0; index < 10; index += 1) { const angle = -Math.PI / 2 + index * Math.PI / 5, radius = index % 2 ? 3.5 : 8, px = Math.cos(angle) * radius, py = Math.sin(angle) * radius; if (index) context.lineTo(px, py); else context.moveTo(px, py); }
+  context.closePath(); context.fillStyle = "#f6b73c"; context.fill(); context.lineWidth = 2; context.strokeStyle = "#684400"; context.stroke(); context.restore();
+}
+async function drawCoverageMap() {
+  const canvas = $("routeMap");
+  if (!canvas) return;
+  const width = canvas.clientWidth || 600, height = width * 0.6, pixelRatio = window.devicePixelRatio || 1;
+  canvas.width = Math.round(width * pixelRatio); canvas.height = Math.round(height * pixelRatio);
+  const context = canvas.getContext("2d"); context.scale(pixelRatio, pixelRatio); context.fillStyle = "#f4f7fb"; context.fillRect(0, 0, width, height);
+  let allRoads;
+  try { allRoads = await roads(); } catch { return; }
+  const visibleRoads = selectedMapCity === "all" ? allRoads : allRoads.filter(road => road.city === selectedMapCity);
+  if (!visibleRoads.length) return;
+  const baseProject = coverageMapProjector(coverageMapBounds(visibleRoads), width, height);
+  const project = point => transformedMapPoint(baseProject(point), width, height);
+  context.lineCap = "round"; context.strokeStyle = "#c5d0df"; context.lineWidth = 1.25;
+  for (const road of visibleRoads) { context.beginPath(); road.coordinates.forEach((point, index) => { const [x, y] = project(point); if (index) context.lineTo(x, y); else context.moveTo(x, y); }); context.stroke(); }
+  context.strokeStyle = "#16a56b"; context.lineWidth = 3;
+  for (const road of visibleRoads) for (let index = 1; index < road.coordinates.length; index += 1) {
+    if (!storedCoverageSegments.has(roadSegmentKey(road, index))) continue;
+    const [x1, y1] = project(road.coordinates[index - 1]), [x2, y2] = project(road.coordinates[index]); context.beginPath(); context.moveTo(x1, y1); context.lineTo(x2, y2); context.stroke();
+  }
+  if (selectedRoutePaths.length) {
+    context.strokeStyle = "#2d6df6"; context.lineWidth = 3; context.lineJoin = "round";
+    for (const route of selectedRoutePaths) { context.beginPath(); route.forEach((point, index) => { const [x, y] = project(point); if (index) context.lineTo(x, y); else context.moveTo(x, y); }); context.stroke(); }
+  }
+  for (const property of savedProperties) {
+    if (!Array.isArray(property.location) || property.location.length !== 2) continue;
+    const [x, y] = project(property.location);
+    if (x >= -12 && x <= width + 12 && y >= -12 && y <= height + 12) drawMapStar(context, x, y);
   }
 }
 
@@ -453,10 +533,10 @@ async function loadRouteSessions() {
   select.replaceChildren(...sessions.map(session => {
     const option = document.createElement("option");
     option.value = session.session_id;
-    option.textContent = `${new Date(session.started_at).toLocaleString()} — ${readableDistance(session.sampled_distance_meters)}, ${session.point_count} points`;
+    option.textContent = `${new Date(session.started_at).toLocaleString()} — ${readableDistance(session.sampled_distance_meters)}`;
     return option;
   }));
-  $("routeSelector").hidden = sessions.length < 2;
+  $("routeSelector").hidden = sessions.length < 1;
   routeSessionsLoaded = true;
 }
 async function loadSelectedRoute() {
@@ -474,13 +554,9 @@ async function loadSelectedRoute() {
       $("routeDetail").textContent = "There are not enough points for a route yet.";
       return;
     }
-    const streetLines = await roads();
-    const coverage = renderCoverageStats([route.coordinates], streetLines);
-    void persistCoveragePreview(coverage);
-    drawRoutePaths([route.coordinates], streetLines, coverage);
-    $("routeCount").textContent = `${route.point_count} points`;
-    $("routeDetail").textContent = `Selected drive: ${readableDistance(route.sampled_distance_meters)} sampled over ${readableDuration(route.duration_seconds)} with ${route.point_count} points. Largest reporting gap: ${readableDistance(route.largest_gap_meters)}. Blue is the private route; green is the start and red is the finish.`;
-    $("coverageDetail").textContent = `Green street segments are within 30 m of this selected drive: about ${readableDistance(coverage.coveredMeters)} of ${readableDistance(coverage.totalMeters)} in the bundled road network. This is a private per-drive preview.`;
+    selectedRoutePaths = [route.coordinates];
+    $("routeDetail").textContent = "One historical drive is shown in blue. Close this section to return to the coverage-first view.";
+    await drawCoverageMap();
   } catch {
     $("routeDetail").textContent = "The private route is unavailable right now. Nothing was shared outside this app.";
   } finally {
@@ -489,11 +565,16 @@ async function loadSelectedRoute() {
   }
 }
 $("loadRoute").addEventListener("click", loadSelectedRoute);
-$("routeSession").addEventListener("change", loadSelectedRoute);
-$("loadHouseholdCoverage").addEventListener("click", async () => {
-  const button = $("loadHouseholdCoverage");
-  button.disabled = true;
-  button.textContent = "Loading…";
+$("driveHistory").addEventListener("toggle", async event => {
+  if (!event.currentTarget.open) {
+    selectedRoutePaths = [];
+    $("routeDetail").textContent = "Drag to pan. Pinch or scroll to zoom. Bright green is already covered; blue-gray is still to cover; gold stars are tagged homes.";
+    return drawCoverageMap();
+  }
+  try { await loadRouteSessions(); }
+  catch { $("routeDetail").textContent = "Historical drives are unavailable right now. Your coverage map is unchanged."; }
+});
+async function refreshCoverageFromCompletedDrives() {
   try {
     await loadRouteSessions();
     const sessionIds = [...$("routeSession").options].map(option => option.value).filter(Boolean);
@@ -503,22 +584,38 @@ $("loadHouseholdCoverage").addEventListener("click", async () => {
       return response.json();
     }));
     const completedRoutes = routes.filter(route => route.coordinates.length >= 2);
-    if (!completedRoutes.length) throw new Error("no completed routes");
+    if (!completedRoutes.length) return;
     const streetLines = await roads();
     const coverage = renderCoverageStats(completedRoutes.map(route => route.coordinates), streetLines);
     void persistCoveragePreview(coverage);
-    drawRoutePaths(completedRoutes.map(route => route.coordinates), streetLines, coverage);
-    const drivenMeters = completedRoutes.reduce((total, route) => total + route.sampled_distance_meters, 0);
-    $("routeCount").textContent = `${completedRoutes.length} drives`;
-    $("routeDetail").textContent = `${completedRoutes.length} completed household drive${completedRoutes.length === 1 ? "" : "s"} shown. Blue lines are private routes; green dots are starts and red dots are finishes.`;
-    $("coverageDetail").textContent = `Green street segments are within 30 m of the ${readableDistance(drivenMeters)} sampled across these completed drives: about ${readableDistance(coverage.coveredMeters)} of ${readableDistance(coverage.totalMeters)} in the bundled road network. This household-wide view is private and calculated only in this browser.`;
+    for (const segment of coverage.covered) storedCoverageSegments.add(segment);
+    renderStoredCoverageStats(storedCoverageSegments, streetLines);
+    await drawCoverageMap();
   } catch {
-    $("routeDetail").textContent = "Household coverage is unavailable right now. Nothing was shared outside this app.";
-  } finally {
-    button.disabled = false;
-    button.textContent = "Show household coverage";
+    // Existing persisted coverage remains visible if a fresh route cannot load.
+  }
+}
+document.querySelectorAll("[data-map-city]").forEach(button => button.addEventListener("click", () => {
+  selectedMapCity = button.dataset.mapCity;
+  mapViewport.scale = 1; mapViewport.x = 0; mapViewport.y = 0;
+  document.querySelectorAll("[data-map-city]").forEach(item => item.classList.toggle("active", item === button));
+  drawCoverageMap();
+}));
+const mapCanvas = $("routeMap");
+function mapPointer(event) { const rect = mapCanvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
+mapCanvas.addEventListener("pointerdown", event => { activePointers.set(event.pointerId, mapPointer(event)); mapCanvas.setPointerCapture(event.pointerId); });
+mapCanvas.addEventListener("pointermove", event => {
+  if (!activePointers.has(event.pointerId)) return;
+  const next = mapPointer(event), previous = activePointers.get(event.pointerId), before = [...activePointers.entries()]; activePointers.set(event.pointerId, next);
+  if (activePointers.size === 1) { mapViewport.x += next.x - previous.x; mapViewport.y += next.y - previous.y; drawCoverageMap(); }
+  if (activePointers.size === 2) {
+    const oldPoints = before.map(([id, point]) => id === event.pointerId ? previous : point), newPoints = [...activePointers.values()];
+    const oldDistance = Math.hypot(oldPoints[0].x - oldPoints[1].x, oldPoints[0].y - oldPoints[1].y), newDistance = Math.hypot(newPoints[0].x - newPoints[1].x, newPoints[0].y - newPoints[1].y);
+    if (oldDistance > 0) { mapViewport.scale = Math.min(10, Math.max(1, mapViewport.scale * newDistance / oldDistance)); drawCoverageMap(); }
   }
 });
+["pointerup", "pointercancel"].forEach(name => mapCanvas.addEventListener(name, event => activePointers.delete(event.pointerId)));
+mapCanvas.addEventListener("wheel", event => { event.preventDefault(); mapViewport.scale = Math.min(10, Math.max(1, mapViewport.scale * (event.deltaY < 0 ? 1.16 : 1 / 1.16))); drawCoverageMap(); }, { passive: false });
 document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
   const input = $(button.dataset.copy);
   try { await navigator.clipboard.writeText(input.value); toast("Copied privately to this phone."); }
@@ -533,4 +630,5 @@ refreshProperties();
 refreshTrackerSignal();
 refreshCoverageHistory();
 activateDashboard("map");
+refreshCoverageFromCompletedDrives();
 setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000);

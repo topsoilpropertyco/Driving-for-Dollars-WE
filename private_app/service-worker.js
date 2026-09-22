@@ -1,4 +1,4 @@
-const CACHE = "five-pointes-private-shell-v5";
+const CACHE = "five-pointes-private-shell-v6";
 const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/coverage_preview.mjs", "/manifest.webmanifest", "/icon.svg", "/maps/grosse-pointe.geojson", "/maps/grosse-pointe-farms.geojson", "/maps/grosse-pointe-park.geojson", "/maps/grosse-pointe-shores.geojson", "/maps/grosse-pointe-woods.geojson"];
 self.addEventListener("install", event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener("activate", event => event.waitUntil(

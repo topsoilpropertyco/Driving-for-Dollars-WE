@@ -33,6 +33,7 @@ const actions = [
   { event_id: "00000000-0000-4000-8000-000000000001", device_id: "synthetic-phone", sequence: 1, occurred_at: "2026-09-20T12:00:00Z", kind: "property_saved", property_identity: propertyIdentity, payload: {} },
   { event_id: "00000000-0000-4000-8000-000000000002", device_id: "synthetic-phone", sequence: 2, occurred_at: "2026-09-20T12:01:00Z", kind: "stage_changed", property_identity: propertyIdentity, payload: { stage: "in_conversation" } },
   { event_id: "00000000-0000-4000-8000-000000000003", device_id: "synthetic-phone", sequence: 3, occurred_at: "2026-09-20T12:02:00Z", kind: "note_added", property_identity: propertyIdentity, payload: { note: "synthetic field note" } },
+  { event_id: "00000000-0000-4000-8000-000000000004", device_id: "synthetic-phone", sequence: 4, occurred_at: "2026-09-20T12:03:00Z", kind: "property_tagged", property_identity: propertyIdentity, payload: { condition: "needs_work", score: 4, latitude: 42.4, longitude: -82.9 } },
 ];
 
 function jsonRequest(path, email, body) {
@@ -61,10 +62,13 @@ const body = await timeline.json();
 assert.equal(body.summary.saved, true);
 assert.equal(body.summary.stage, "in_conversation");
 assert.deepEqual(body.summary.notes, ["synthetic field note"]);
-assert.equal(body.summary.action_count, 3);
+assert.equal(body.summary.action_count, 4);
+assert.equal(body.summary.condition, "needs_work");
+assert.equal(body.summary.score, 4);
+assert.deepEqual(body.summary.location, [-82.9, 42.4]);
 
 const savedHomes = await worker.fetch(new Request("https://private.example.test/api/v1/properties", { headers: { "Cf-Access-Authenticated-User-Email": "claire@example.test" } }), env);
 assert.equal(savedHomes.status, 200);
-assert.deepEqual(await savedHomes.json(), { properties: [{ property_identity: propertyIdentity, saved: true, stage: "in_conversation", action_count: 3, last_activity_at: "2026-09-20T12:02:00Z" }] });
+assert.deepEqual(await savedHomes.json(), { properties: [{ property_identity: propertyIdentity, saved: true, stage: "in_conversation", condition: "needs_work", score: 4, location: [-82.9, 42.4], action_count: 4, last_activity_at: "2026-09-20T12:03:00Z" }] });
 
 console.log("worker actions contract: passed");

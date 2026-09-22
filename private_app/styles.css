@@ -278,8 +278,29 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #f4f7fb;
+  touch-action: none;
+  cursor: grab;
 }
+.route-map:active { cursor: grabbing; }
 .route-selector { margin-top: 10px; }
+.map-city-picker { display: flex; gap: 7px; overflow-x: auto; margin: 0 -2px 14px; padding: 2px; scrollbar-width: none; }
+.map-city-picker button { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; padding: 8px 11px; background: #fff; color: var(--muted); font: inherit; font-size: 12px; font-weight: 800; }
+.map-city-picker button.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 11px; margin: 0 0 16px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.map-legend span::before { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 50%; content: ""; }
+.map-legend .covered::before { background: #16a56b; box-shadow: 0 0 7px #16a56b; }
+.map-legend .uncovered::before { background: #c5d0df; }
+.map-legend .saved-home::before { width: auto; height: auto; content: "★"; color: #b57700; font-size: 15px; line-height: 10px; vertical-align: -1px; }
+.scoreboard-title { margin: 2px 0 -2px; font-size: 15px; letter-spacing: -.02em; }
+.drive-history { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 15px; }
+.drive-history summary { cursor: pointer; color: #203757; font-weight: 800; }
+.condition-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 16px 0 0; padding: 0; border: 0; }
+.condition-picker legend { grid-column: 1 / -1; margin-bottom: 1px; font-size: 13px; font-weight: 750; }
+.condition-picker label { display: flex; align-items: center; gap: 6px; margin: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 12px; }
+.condition-picker input, .location-choice input { display: inline-block; width: auto; margin: 0; padding: 0; }
+.location-choice { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
+#propertyScore { padding: 0; accent-color: var(--blue); }
+#propertyScoreValue { color: var(--blue); font-weight: 800; }
 .coverage-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }
 .coverage-stats div { padding: 10px; border-radius: 12px; background: #f5f8fe; }
 .coverage-stats strong,.coverage-stats span { display: block; }

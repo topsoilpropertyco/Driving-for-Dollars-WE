@@ -24,7 +24,8 @@ STAGES = (
     "closed",
     "archived",
 )
-ACTION_KINDS = ("property_saved", "note_added", "stage_changed", "outreach_logged")
+ACTION_KINDS = ("property_saved", "note_added", "stage_changed", "outreach_logged", "property_tagged")
+CONDITIONS = ("pristine", "average", "needs_work", "abandoned")
 
 
 class InvalidAction(ValueError):
@@ -78,6 +79,15 @@ def validate_action(action: HouseholdAction) -> HouseholdAction:
         method = action.payload.get("method")
         if set(action.payload) != {"method"} or not isinstance(method, str) or not method.strip():
             raise InvalidAction("outreach_logged requires one contact method")
+    if action.kind == "property_tagged":
+        expected = {"condition", "score"}
+        has_location = "latitude" in action.payload or "longitude" in action.payload
+        if has_location:
+            expected |= {"latitude", "longitude"}
+        if set(action.payload) != expected or action.payload.get("condition") not in CONDITIONS or not isinstance(action.payload.get("score"), int) or not 1 <= action.payload["score"] <= 10:
+            raise InvalidAction("property_tagged requires a supported condition and score from 1 to 10")
+        if has_location and (not isinstance(action.payload["latitude"], (int, float)) or not isinstance(action.payload["longitude"], (int, float)) or not -90 <= action.payload["latitude"] <= 90 or not -180 <= action.payload["longitude"] <= 180):
+            raise InvalidAction("property_tagged location is invalid")
     if action.kind == "property_saved" and action.payload:
         raise InvalidAction("property_saved has no payload")
     return action
