@@ -58,6 +58,7 @@
       <form id="captureForm">
         <label for="propertyIdentity">Address</label>
         <input id="propertyIdentity" name="propertyIdentity" autocomplete="street-address" inputmode="text" placeholder="Street address" required maxlength="256">
+        <div class="address-suggestions" id="addressSuggestions" role="listbox" aria-label="Address suggestions" hidden></div>
         <p class="help">Use the home’s street address only. Do not enter an owner name, phone number, or email.</p>
 
         <fieldset class="condition-picker"><legend>House condition</legend>
@@ -70,7 +71,7 @@
         <input id="propertyScore" name="propertyScore" type="range" min="1" max="10" value="5" step="1">
         <label for="privateLabel">Private Label</label>
         <input id="privateLabel" aria-label="Private Label" disabled placeholder="Leave this blank">
-        <p class="help" id="locationStatus">When you save, Five Pointes automatically adds a private map star at your current location. Use this only while parked or as a passenger.</p>
+        <p class="help" id="locationStatus">Choose an address suggestion for an exact address star, or Five Pointes uses your current location when you save. Use this only while parked or as a passenger.</p>
 
         <label for="note">Quick note <span>optional</span></label>
         <textarea id="note" name="note" maxlength="1000" placeholder="What stood out about the house or block?"></textarea>

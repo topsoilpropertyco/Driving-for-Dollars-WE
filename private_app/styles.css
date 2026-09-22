@@ -300,6 +300,10 @@ textarea:focus-visible {
 .condition-picker input, .location-choice input { display: inline-block; width: auto; margin: 0; padding: 0; }
 .location-choice { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
 #privateLabel:disabled { border-color: #dde3ec; background: #eef2f7; color: #8a96a8; cursor: not-allowed; }
+.address-suggestions { position: relative; z-index: 3; margin-top: 4px; overflow: hidden; border: 1px solid #cfd8e6; border-radius: 12px; background: #fff; box-shadow: 0 8px 20px #10213b18; }
+.address-suggestions button { display: block; width: 100%; border: 0; border-bottom: 1px solid var(--line); padding: 12px 13px; background: #fff; color: var(--ink); font: inherit; font-size: 14px; text-align: left; }
+.address-suggestions button:last-child { border-bottom: 0; }
+.address-suggestions button:active,.address-suggestions button:focus-visible { background: #edf3ff; outline: none; }
 #propertyScore { padding: 0; accent-color: var(--blue); }
 #propertyScoreValue { color: var(--blue); font-weight: 800; }
 .coverage-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }

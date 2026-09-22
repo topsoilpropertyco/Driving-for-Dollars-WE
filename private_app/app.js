@@ -138,6 +138,49 @@ async function saveSelectedPropertyAction(kind, payload, message) {
 }
 let savedProperties = [];
 let visibleProperties = 25;
+let addressSession = crypto.randomUUID();
+let selectedAddress = null;
+let addressSearchTimer;
+function hideAddressSuggestions() { $("addressSuggestions").replaceChildren(); $("addressSuggestions").hidden = true; }
+function renderAddressSuggestions(suggestions) {
+  const list = $("addressSuggestions");
+  list.replaceChildren(...suggestions.map(suggestion => {
+    const button = document.createElement("button");
+    button.type = "button"; button.setAttribute("role", "option"); button.textContent = suggestion.address;
+    button.addEventListener("click", () => selectAddressSuggestion(suggestion));
+    return button;
+  }));
+  list.hidden = !suggestions.length;
+}
+async function selectAddressSuggestion(suggestion) {
+  hideAddressSuggestions();
+  $("propertyIdentity").disabled = true;
+  $("locationStatus").textContent = "Confirming selected address…";
+  try {
+    const response = await fetch(`/api/v1/address-place?place_id=${encodeURIComponent(suggestion.place_id)}&session=${encodeURIComponent(addressSession)}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("address unavailable");
+    const place = await response.json();
+    selectedAddress = place;
+    $("propertyIdentity").value = place.address;
+    $("locationStatus").textContent = "Exact address selected. Saving will place the gold star at this address.";
+  } catch {
+    $("locationStatus").textContent = "That address could not be confirmed. You can keep typing or use your current location when saving.";
+  } finally { $("propertyIdentity").disabled = false; }
+}
+$("propertyIdentity").addEventListener("input", () => {
+  selectedAddress = null;
+  clearTimeout(addressSearchTimer);
+  const query = $("propertyIdentity").value.trim();
+  if (query.length < 3) return hideAddressSuggestions();
+  addressSearchTimer = setTimeout(async () => {
+    try {
+      const response = await fetch(`/api/v1/address-autocomplete?q=${encodeURIComponent(query)}&session=${encodeURIComponent(addressSession)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("address search unavailable");
+      const { suggestions } = await response.json();
+      renderAddressSuggestions(suggestions);
+    } catch { hideAddressSuggestions(); }
+  }, 250);
+});
 function renderProperties() {
   const query = $("propertySearch").value.trim().toLowerCase();
   const stage = $("propertyStageFilter").value;
@@ -201,23 +244,31 @@ $("captureForm").addEventListener("submit", async event => {
     const condition = document.querySelector('input[name="condition"]:checked')?.value;
     const tag = { condition, score: Number($("propertyScore").value) };
     if (!condition || !Number.isInteger(tag.score)) throw new Error("invalid tag");
-    const position = await new Promise((resolve, reject) => navigator.geolocation?.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12_000, maximumAge: 15_000 }) || reject(new Error("location unavailable")));
-    tag.latitude = position.coords.latitude;
-    tag.longitude = position.coords.longitude;
+    if (selectedAddress && selectedAddress.address === identity) {
+      tag.latitude = selectedAddress.latitude;
+      tag.longitude = selectedAddress.longitude;
+    } else {
+      const position = await new Promise((resolve, reject) => navigator.geolocation?.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12_000, maximumAge: 15_000 }) || reject(new Error("location unavailable")));
+      tag.latitude = position.coords.latitude;
+      tag.longitude = position.coords.longitude;
+    }
     enqueue(action("property_saved", identity, {}));
     enqueue(action("note_added", identity, { note: privateTagNote(tag) }));
     if (note) enqueue(action("note_added", identity, { note }));
     $("captureForm").reset();
+    selectedAddress = null;
+    addressSession = crypto.randomUUID();
+    hideAddressSuggestions();
     $("propertyScore").value = "5";
     $("propertyScoreValue").value = "5";
     $("propertyScoreValue").textContent = "5";
-    $("locationStatus").textContent = "When you save, Five Pointes automatically adds a private map star at your current location. Use this only while parked or as a passenger.";
+    $("locationStatus").textContent = "Choose an address suggestion for an exact address star, or Five Pointes uses your current location when you save. Use this only while parked or as a passenger.";
     refreshStatus();
     toast("Tagged house saved. Ready for the next one.");
     await sync();
   } catch {
-    $("locationStatus").textContent = "Five Pointes could not get a current location, so it did not save this tag. Check browser location permission and try again while parked or as a passenger.";
-    toast("Location is needed to save this tagged home.");
+    $("locationStatus").textContent = "Five Pointes could not place the star, so it did not save this tag. Choose an address suggestion or check browser location permission, then try again.";
+    toast("A confirmed address or current location is needed to save this home.");
   } finally {
     submit.disabled = false;
     submit.textContent = "Save and Tag This House";

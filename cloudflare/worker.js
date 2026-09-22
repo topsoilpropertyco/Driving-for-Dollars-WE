@@ -161,6 +161,41 @@ function validCoverageSegment(value) {
   return typeof value === "string" && value.length > 0 && value.length <= 256 && /^[A-Za-z0-9 .:_-]+$/.test(value);
 }
 
+function validPlaceSession(value) { return typeof value === "string" && /^[0-9a-f-]{36}$/i.test(value); }
+function validPlaceId(value) { return typeof value === "string" && /^[A-Za-z0-9_-]{1,256}$/.test(value); }
+async function googlePlaces(request, env, email) {
+  const url = new URL(request.url);
+  const key = typeof env.GOOGLE_PLACES_API_KEY === "string" ? env.GOOGLE_PLACES_API_KEY : "";
+  if (!key) return json({ error: "address_search_unavailable" }, 503);
+  const session = url.searchParams.get("session");
+  if (!validPlaceSession(session)) return json({ error: "invalid_request" }, 400);
+  const input = url.searchParams.get("q")?.trim() || "";
+  if (url.pathname === "/api/v1/address-autocomplete") {
+    if (input.length < 3 || input.length > 180) return json({ error: "invalid_request" }, 400);
+    const response = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+      method: "POST",
+      headers: { "content-type": "application/json", "X-Goog-Api-Key": key, "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text" },
+      body: JSON.stringify({ input, sessionToken: session, includedRegionCodes: ["us"] }),
+    });
+    if (!response.ok) return json({ error: "address_search_unavailable" }, 503);
+    const body = await response.json();
+    const suggestions = (body.suggestions || []).flatMap(item => {
+      const prediction = item.placePrediction;
+      return validPlaceId(prediction?.placeId) && typeof prediction?.text?.text === "string" ? [{ place_id: prediction.placeId, address: prediction.text.text.slice(0, 256) }] : [];
+    }).slice(0, 5);
+    return json({ suggestions });
+  }
+  const placeId = url.searchParams.get("place_id");
+  if (!validPlaceId(placeId)) return json({ error: "invalid_request" }, 400);
+  const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?sessionToken=${encodeURIComponent(session)}`, {
+    headers: { "X-Goog-Api-Key": key, "X-Goog-FieldMask": "formattedAddress,location" },
+  });
+  if (!response.ok) return json({ error: "address_search_unavailable" }, 503);
+  const body = await response.json();
+  if (typeof body.formattedAddress !== "string" || !Number.isFinite(body.location?.latitude) || !Number.isFinite(body.location?.longitude)) return json({ error: "address_search_unavailable" }, 503);
+  return json({ address: body.formattedAddress.slice(0, 256), latitude: body.location.latitude, longitude: body.location.longitude });
+}
+
 async function coveragePreview(request, env, email) {
   if (request.method === "GET") {
     const result = await env.DB.prepare(
@@ -380,6 +415,7 @@ export default {
       }
       if (request.method === "GET" && url.pathname === "/api/v1/recorders/sessions") return recorderSessionList(env, email);
       if ((request.method === "GET" || request.method === "POST") && url.pathname === "/api/v1/coverage-preview") return coveragePreview(request, env, email);
+      if (request.method === "GET" && (url.pathname === "/api/v1/address-autocomplete" || url.pathname === "/api/v1/address-place")) return googlePlaces(request, env, email);
       if (request.method === "POST" && url.pathname === "/api/v1/actions") return actions(request, env);
       if (request.method === "POST" && url.pathname === "/api/v1/import-plans") return stageImportPlan(request, env);
       const advance = url.pathname.match(/^\/api\/v1\/import-plans\/([^/]+)\/advance$/);
