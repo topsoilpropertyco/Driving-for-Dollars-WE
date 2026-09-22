@@ -570,7 +570,7 @@ function drawStreetLabels(context, roadLines, project, width, height) {
 async function drawCoverageMap() {
   const canvas = $("routeMap");
   if (!canvas) return;
-  const width = canvas.clientWidth || 600, height = width * 0.6, pixelRatio = window.devicePixelRatio || 1;
+  const width = canvas.clientWidth || 600, height = canvas.clientHeight || width * 0.6, pixelRatio = window.devicePixelRatio || 1;
   canvas.width = Math.round(width * pixelRatio); canvas.height = Math.round(height * pixelRatio);
   const context = canvas.getContext("2d"); context.scale(pixelRatio, pixelRatio); context.fillStyle = "#f4f7fb"; context.fillRect(0, 0, width, height);
   let allRoads;
@@ -614,7 +614,7 @@ function projectRoute(points, width, height) {
 function drawRoutePaths(routes, roadLines, coverage) {
   const canvas = $("routeMap");
   const width = canvas.clientWidth || 600;
-  const height = width * 0.6;
+  const height = canvas.clientHeight || width * 0.6;
   const pixelRatio = window.devicePixelRatio || 1;
   canvas.width = Math.round(width * pixelRatio);
   canvas.height = Math.round(height * pixelRatio);
@@ -777,7 +777,7 @@ document.querySelectorAll("[data-map-city]").forEach(button => button.addEventLi
 const mapCanvas = $("routeMap");
 function mapPointer(event) { const rect = mapCanvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
 function zoomMapAt(x, y, factor) {
-  const width = mapCanvas.clientWidth || 600, height = width * 0.6;
+  const width = mapCanvas.clientWidth || 600, height = mapCanvas.clientHeight || width * 0.6;
   const nextScale = Math.min(2048, Math.max(1, mapViewport.scale * factor));
   const actualFactor = nextScale / mapViewport.scale;
   mapViewport.x = x - width / 2 - (x - width / 2 - mapViewport.x) * actualFactor;
@@ -808,8 +808,8 @@ mapCanvas.addEventListener("pointermove", event => {
 });
 ["pointerup", "pointercancel"].forEach(name => mapCanvas.addEventListener(name, event => activePointers.delete(event.pointerId)));
 mapCanvas.addEventListener("wheel", event => { event.preventDefault(); const point = mapPointer(event); zoomMapAt(point.x, point.y, event.deltaY < 0 ? 1.2 : 1 / 1.2); drawCoverageMap(); }, { passive: false });
-$("zoomMapIn").addEventListener("click", () => { zoomMapAt(mapCanvas.clientWidth / 2, (mapCanvas.clientWidth || 600) * 0.3, 2); drawCoverageMap(); });
-$("zoomMapOut").addEventListener("click", () => { zoomMapAt(mapCanvas.clientWidth / 2, (mapCanvas.clientWidth || 600) * 0.3, 0.5); drawCoverageMap(); });
+$("zoomMapIn").addEventListener("click", () => { zoomMapAt(mapCanvas.clientWidth / 2, mapCanvas.clientHeight / 2, 2); drawCoverageMap(); });
+$("zoomMapOut").addEventListener("click", () => { zoomMapAt(mapCanvas.clientWidth / 2, mapCanvas.clientHeight / 2, 0.5); drawCoverageMap(); });
 $("resetMapView").addEventListener("click", () => { mapViewport.scale = 1; mapViewport.x = 0; mapViewport.y = 0; drawCoverageMap(); });
 document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", async () => {
   const input = $(button.dataset.copy);

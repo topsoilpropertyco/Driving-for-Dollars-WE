@@ -272,9 +272,10 @@ textarea:focus-visible {
 .route-map {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 5 / 3;
-  margin: 14px 0;
+  height: min(86svh, 860px);
+  min-height: 620px;
+  aspect-ratio: auto;
+  margin: 10px 0 16px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #f4f7fb;
@@ -289,6 +290,16 @@ textarea:focus-visible {
 .map-controls { display: flex; gap: 8px; justify-content: flex-end; margin: -5px 0 2px; }
 .map-controls .secondary { min-height: 36px; padding: 7px 12px; font-size: 14px; }
 .map-controls #zoomMapIn, .map-controls #zoomMapOut { min-width: 40px; font-size: 21px; line-height: 1; }
+@media (max-width: 680px) {
+  .coverage-map-card { margin-right: -20px; margin-left: -20px; padding-right: 0; padding-left: 0; border-radius: 0; border-right: 0; border-left: 0; }
+  .coverage-map-card > :not(.route-map) { margin-right: 20px; margin-left: 20px; }
+  .coverage-map-card .map-city-picker { margin: 0 18px 10px; }
+  .coverage-map-card .map-controls { margin: 0 20px 2px; }
+  .coverage-map-card .route-map { border-radius: 0; border-right: 0; border-left: 0; }
+}
+@media (max-height: 700px) {
+  .route-map { height: 78svh; min-height: 500px; }
+}
 .map-legend { display: flex; flex-wrap: wrap; gap: 11px; margin: 0 0 16px; color: var(--muted); font-size: 12px; font-weight: 700; }
 .map-legend span::before { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 50%; content: ""; }
 .map-legend .covered::before { background: #16a56b; box-shadow: 0 0 7px #16a56b; }
