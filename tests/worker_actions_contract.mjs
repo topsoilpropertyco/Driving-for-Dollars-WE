@@ -56,6 +56,12 @@ const replay = await worker.fetch(jsonRequest("/api/v1/actions", "seth@example.t
 assert.equal(replay.status, 202);
 assert.deepEqual((await replay.json()).already_seen_event_ids, actions.map(action => action.event_id));
 
+const claireProperty = "MI:WAYNE:SYNTHETIC-200";
+const claireAction = { event_id: "00000000-0000-4000-8000-000000000005", device_id: "second-synthetic-phone", sequence: 1, occurred_at: "2026-09-20T12:04:00Z", kind: "property_saved", property_identity: claireProperty, payload: {} };
+const claireAccepted = await worker.fetch(jsonRequest("/api/v1/actions", "claire@example.test", { actions: [claireAction] }), env);
+assert.equal(claireAccepted.status, 202);
+assert.deepEqual((await claireAccepted.json()).accepted_event_ids, [claireAction.event_id]);
+
 const timeline = await worker.fetch(new Request(`https://private.example.test/api/v1/properties/${propertyIdentity}`, { headers: { "Cf-Access-Authenticated-User-Email": "claire@example.test" } }), env);
 assert.equal(timeline.status, 200);
 const body = await timeline.json();
@@ -67,8 +73,11 @@ assert.equal(body.summary.condition, "needs_work");
 assert.equal(body.summary.score, 4);
 assert.deepEqual(body.summary.location, [-82.9, 42.4]);
 
-const savedHomes = await worker.fetch(new Request("https://private.example.test/api/v1/properties", { headers: { "Cf-Access-Authenticated-User-Email": "claire@example.test" } }), env);
+const savedHomes = await worker.fetch(new Request("https://private.example.test/api/v1/properties", { headers: { "Cf-Access-Authenticated-User-Email": "seth@example.test" } }), env);
 assert.equal(savedHomes.status, 200);
-assert.deepEqual(await savedHomes.json(), { properties: [{ property_identity: propertyIdentity, saved: true, stage: "in_conversation", condition: "needs_work", score: 4, location: [-82.9, 42.4], action_count: 4, last_activity_at: "2026-09-20T12:03:00Z" }] });
+assert.deepEqual(await savedHomes.json(), { properties: [
+  { property_identity: claireProperty, saved: true, stage: "no_outreach", condition: null, score: null, location: null, action_count: 1, last_activity_at: "2026-09-20T12:04:00Z" },
+  { property_identity: propertyIdentity, saved: true, stage: "in_conversation", condition: "needs_work", score: 4, location: [-82.9, 42.4], action_count: 4, last_activity_at: "2026-09-20T12:03:00Z" },
+] });
 
 console.log("worker actions contract: passed");

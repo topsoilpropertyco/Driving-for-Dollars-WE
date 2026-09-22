@@ -10,9 +10,8 @@ async function hash(value) {
 }
 
 class FakeRecorderD1 {
-  constructor(deviceId, tokenHash) {
-    this.deviceId = deviceId;
-    this.tokenHash = tokenHash;
+  constructor(devices) {
+    this.devices = new Map(devices);
     this.points = new Set();
   }
 
@@ -22,7 +21,7 @@ class FakeRecorderD1 {
 
   async first(sql, args) {
     if (!sql.includes("FROM recorder_devices")) throw new Error("unexpected lookup");
-    return args[0] === this.deviceId ? { token_hash: this.tokenHash } : null;
+    return this.devices.has(args[0]) ? { token_hash: this.devices.get(args[0]) } : null;
   }
 
   async run(sql, args) {
@@ -34,7 +33,9 @@ class FakeRecorderD1 {
 
 const deviceId = "pilot-01234567";
 const token = "a".repeat(43);
-const db = new FakeRecorderD1(deviceId, await hash(token));
+const secondDeviceId = "pilot-76543210";
+const secondToken = "c".repeat(43);
+const db = new FakeRecorderD1([[deviceId, await hash(token)], [secondDeviceId, await hash(secondToken)]]);
 const env = { DB: db };
 const now = Date.now();
 const validPath = `/?id=${deviceId}&token=${token}&lat=42.4&lon=-82.9&timestamp=${now}&accuracy=8&speed=10&bearing=180`;
@@ -44,6 +45,9 @@ assert.equal((await recorder.fetch(new Request(`https://ingest.example/?id=${dev
 assert.equal((await recorder.fetch(new Request(`https://ingest.example${validPath}`), env)).status, 200);
 assert.equal((await recorder.fetch(new Request(`https://ingest.example${validPath}`), env)).status, 200);
 assert.equal(db.points.size, 1);
+const secondPath = `/?id=${secondDeviceId}&token=${secondToken}&lat=42.401&lon=-82.901&timestamp=${now}&accuracy=8`;
+assert.equal((await recorder.fetch(new Request(`https://ingest.example${secondPath}`), env)).status, 200);
+assert.equal(db.points.size, 2);
 assert.equal((await recorder.fetch(new Request(`https://ingest.example/?id=${deviceId}&token=${token}&lat=42.4&lon=-82.9&timestamp=${now - 15 * 24 * 60 * 60 * 1000}`), env)).status, 400);
 assert.equal((await recorder.fetch(new Request("https://ingest.example/readback"), env)).status, 404);
 

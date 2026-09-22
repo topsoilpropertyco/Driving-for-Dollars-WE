@@ -85,7 +85,7 @@ async function recorderStatus(env, email) {
   // Deliberately return aggregate delivery health only. Location data stays in
   // the isolated recorder store and is never exposed to the phone dashboard.
   const row = await env.DB.prepare(
-    "SELECT COUNT(DISTINCT d.device_id) AS active_devices, SUM(CASE WHEN d.created_by_email = ? THEN 1 ELSE 0 END) AS account_active_devices, COUNT(p.device_id) AS points_received, MAX(p.received_at) AS latest_received_at, MAX(p.recorded_at) AS latest_recorded_at FROM recorder_devices d LEFT JOIN recorder_points p ON p.device_id = d.device_id WHERE d.revoked_at IS NULL"
+    "SELECT COUNT(DISTINCT d.device_id) AS active_devices, COUNT(DISTINCT CASE WHEN d.created_by_email = ? THEN d.device_id END) AS account_active_devices, COUNT(p.device_id) AS points_received, MAX(p.received_at) AS latest_received_at, MAX(p.recorded_at) AS latest_recorded_at FROM recorder_devices d LEFT JOIN recorder_points p ON p.device_id = d.device_id WHERE d.revoked_at IS NULL"
   ).bind(email).first();
   return json({
     active_devices: Number(row?.active_devices || 0),
