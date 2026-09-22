@@ -148,6 +148,14 @@ function renderProperties() {
   }));
   $("moreProperties").hidden = displayed.length >= matches.length;
 }
+function renderPipeline() {
+  const activeStages = new Set(["reached_out", "waiting_for_reply", "in_conversation", "contractor_offer", "realtor_referral", "closed"]);
+  $("pipelineSaved").textContent = String(savedProperties.length);
+  $("pipelineReached").textContent = String(savedProperties.filter(property => activeStages.has(property.stage)).length);
+  $("pipelineConversation").textContent = String(savedProperties.filter(property => property.stage === "in_conversation").length);
+  $("pipelineOffer").textContent = String(savedProperties.filter(property => property.stage === "contractor_offer").length);
+  $("pipelineClosed").textContent = String(savedProperties.filter(property => property.stage === "closed").length);
+}
 async function refreshProperties() {
   const button = $("refreshProperties");
   button.disabled = true;
@@ -159,6 +167,7 @@ async function refreshProperties() {
     visibleProperties = 25;
     $("propertyCount").textContent = `${properties.length} saved`;
     renderProperties();
+    renderPipeline();
     if (!properties.length) $("propertiesDetail").textContent = "No saved homes yet. Add one with Quick capture while parked.";
     else $("propertiesDetail").textContent = "Search or filter your household captures below.";
   } catch {
@@ -191,6 +200,13 @@ $("captureForm").addEventListener("submit", async event => {
   }
 });
 $("syncNow").addEventListener("click", sync);
+function activateDashboard(view) {
+  document.querySelectorAll("[data-dashboard-view]").forEach(item => item.classList.toggle("active", item.dataset.dashboardView === view));
+  document.querySelectorAll("[data-dashboard-panel]").forEach(panel => { panel.hidden = panel.dataset.dashboardPanel !== view; });
+  if (view === "map") loadSelectedRoute();
+  if (view === "properties" || view === "pipeline") refreshProperties();
+}
+document.querySelectorAll("[data-dashboard-view]").forEach(button => button.addEventListener("click", () => activateDashboard(button.dataset.dashboardView)));
 $("refreshProperties").addEventListener("click", refreshProperties);
 $("propertySearch").addEventListener("input", () => { visibleProperties = 25; renderProperties(); });
 $("propertyStageFilter").addEventListener("change", () => { visibleProperties = 25; renderProperties(); });
@@ -278,24 +294,35 @@ $("checkRecorder").addEventListener("click", async () => {
 });
 
 const STREET_FILES = [
-  "/maps/grosse-pointe.geojson", "/maps/grosse-pointe-farms.geojson", "/maps/grosse-pointe-park.geojson",
-  "/maps/grosse-pointe-shores.geojson", "/maps/grosse-pointe-woods.geojson",
+  { path: "/maps/grosse-pointe.geojson", city: "Grosse Pointe" }, { path: "/maps/grosse-pointe-farms.geojson", city: "Farms" }, { path: "/maps/grosse-pointe-park.geojson", city: "Park" },
+  { path: "/maps/grosse-pointe-shores.geojson", city: "Shores" }, { path: "/maps/grosse-pointe-woods.geojson", city: "Woods" },
 ];
 let streetSegments;
 
 async function roads() {
   if (streetSegments) return streetSegments;
-  const collections = await Promise.all(STREET_FILES.map(async path => {
-    const response = await fetch(path, { cache: "force-cache" });
+  const collections = await Promise.all(STREET_FILES.map(async source => {
+    const response = await fetch(source.path, { cache: "force-cache" });
     if (!response.ok) throw new Error("map data unavailable");
-    return response.json();
+    return { source, collection: await response.json() };
   }));
-  streetSegments = collections.flatMap(collection => (collection.features || []).flatMap(feature => {
+  streetSegments = collections.flatMap(({ source, collection }) => (collection.features || []).flatMap((feature, featureIndex) => {
     const geometry = feature.geometry || {};
     const name = feature.properties?.name || "Unnamed street";
-    return (geometry.type === "LineString" ? [geometry.coordinates] : geometry.type === "MultiLineString" ? geometry.coordinates : []).map(coordinates => ({ name, coordinates }));
+    return (geometry.type === "LineString" ? [geometry.coordinates] : geometry.type === "MultiLineString" ? geometry.coordinates : []).map((coordinates, lineIndex) => ({ name, city: source.city, id: `${source.city}:${featureIndex}:${lineIndex}`, coordinates }));
   }));
   return streetSegments;
+}
+
+function roadSegmentKey(road, index) { return `${road.id || road.name}|${index}`; }
+function coveragePercent(coverage) { return coverage.totalMeters ? `${((coverage.coveredMeters / coverage.totalMeters) * 100).toFixed(1)}%` : "—"; }
+function renderCoverageStats(routePaths, streetLines) {
+  const overall = previewCoverage(routePaths, streetLines);
+  $("overallCoverage").textContent = coveragePercent(overall);
+  [["Grosse Pointe", "grossePointeCoverage"], ["Farms", "farmsCoverage"], ["Park", "parkCoverage"], ["Shores", "shoresCoverage"], ["Woods", "woodsCoverage"]].forEach(([city, target]) => {
+    $(target).textContent = coveragePercent(previewCoverage(routePaths, streetLines.filter(road => road.city === city)));
+  });
+  return overall;
 }
 
 function projectRoute(points, width, height) {
@@ -339,7 +366,7 @@ function drawRoutePaths(routes, roadLines, coverage) {
   context.lineWidth = 3;
   for (const road of roadLines) {
     for (let index = 1; index < road.coordinates.length; index += 1) {
-      if (!coverage.covered.has(`${road.name}|${index}`)) continue;
+      if (!coverage.covered.has(roadSegmentKey(road, index))) continue;
       const [startX, startY] = project(road.coordinates[index - 1]);
       const [endX, endY] = project(road.coordinates[index]);
       context.beginPath(); context.moveTo(startX, startY); context.lineTo(endX, endY); context.stroke();
@@ -405,7 +432,7 @@ async function loadSelectedRoute() {
       return;
     }
     const streetLines = await roads();
-    const coverage = previewCoverage(route.coordinates, streetLines);
+    const coverage = renderCoverageStats([route.coordinates], streetLines);
     drawRoutePaths([route.coordinates], streetLines, coverage);
     $("routeCount").textContent = `${route.point_count} points`;
     $("routeDetail").textContent = `Selected drive: ${readableDistance(route.sampled_distance_meters)} sampled over ${readableDuration(route.duration_seconds)} with ${route.point_count} points. Largest reporting gap: ${readableDistance(route.largest_gap_meters)}. Blue is the private route; green is the start and red is the finish.`;
@@ -434,7 +461,7 @@ $("loadHouseholdCoverage").addEventListener("click", async () => {
     const completedRoutes = routes.filter(route => route.coordinates.length >= 2);
     if (!completedRoutes.length) throw new Error("no completed routes");
     const streetLines = await roads();
-    const coverage = previewCoverage(completedRoutes.map(route => route.coordinates), streetLines);
+    const coverage = renderCoverageStats(completedRoutes.map(route => route.coordinates), streetLines);
     drawRoutePaths(completedRoutes.map(route => route.coordinates), streetLines, coverage);
     const drivenMeters = completedRoutes.reduce((total, route) => total + route.sampled_distance_meters, 0);
     $("routeCount").textContent = `${completedRoutes.length} drives`;
@@ -459,4 +486,5 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-wor
 refreshStatus();
 refreshProperties();
 refreshTrackerSignal();
+activateDashboard("map");
 setInterval(() => { if (document.visibilityState === "visible") refreshTrackerSignal(); }, 15_000);

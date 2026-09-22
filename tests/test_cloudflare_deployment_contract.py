@@ -128,6 +128,10 @@ def test_private_route_map_uses_authenticated_api_and_bundled_street_context():
     assert '"/coverage_preview.mjs"' in (ROOT / "private_app" / "service-worker.js").read_text()
     assert "self.skipWaiting()" in (ROOT / "private_app" / "service-worker.js").read_text()
     assert 'completed household drive' in app
+    assert 'data-dashboard-view="map"' in page
+    assert 'data-dashboard-view="pipeline"' in page
+    assert 'id="overallCoverage"' in page
+    assert 'renderPipeline' in app
 
 
 def test_private_phone_shell_has_a_recent_signal_indicator_not_a_claimed_switch_state():

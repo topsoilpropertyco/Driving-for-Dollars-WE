@@ -26,7 +26,14 @@
       </section>
     </header>
 
-    <section class="card compact drive-guide" aria-labelledby="drive-guide-title">
+    <nav class="dashboard-nav" aria-label="Five Pointes sections">
+      <button class="active" type="button" data-dashboard-view="map">Map</button>
+      <button type="button" data-dashboard-view="properties">Properties</button>
+      <button type="button" data-dashboard-view="pipeline">Pipeline</button>
+      <button type="button" data-dashboard-view="crm">CRM</button>
+    </nav>
+
+    <section class="card compact drive-guide dashboard-panel" data-dashboard-panel="crm" aria-labelledby="drive-guide-title">
       <div class="card-heading"><div><p class="eyebrow">Every drive</p><h2 id="drive-guide-title">Three simple steps</h2></div></div>
       <ol>
         <li><strong>Before leaving:</strong> open Traccar and turn Continuous tracking on.</li>
@@ -36,7 +43,7 @@
       <p class="help">You do not create or copy recorder settings for each drive. The green tracker light means a private report arrived within the last two minutes; it is not a direct reading of the Traccar switch.</p>
     </section>
 
-    <section class="card field-test" aria-labelledby="field-test-title">
+    <section class="card field-test dashboard-panel" data-dashboard-panel="crm" aria-labelledby="field-test-title">
       <div class="card-heading"><div><p class="eyebrow">Next field test</p><h2 id="field-test-title">Daycare drive tomorrow morning</h2></div><span class="pill">Planned</span></div>
       <ol>
         <li>Before leaving, open Traccar and turn <strong>Continuous tracking</strong> on.</li>
@@ -46,7 +53,7 @@
       <p class="help">This drive begins outside the bundled Grosse Pointe street area. Private recording and route playback still work for the whole drive. Green coverage preview appears only where the bundled Grosse Pointe road geometry is available.</p>
     </section>
 
-    <section class="card" aria-labelledby="capture-title">
+    <section class="card dashboard-panel" data-dashboard-panel="crm" aria-labelledby="capture-title">
       <div class="card-heading"><div><p class="eyebrow">Quick capture</p><h2 id="capture-title">Save an observation</h2></div><span class="pill" id="queueCount">0 queued</span></div>
       <form id="captureForm">
         <label for="propertyIdentity">Property identity</label>
@@ -71,7 +78,7 @@
       </form>
     </section>
 
-    <section class="card compact" aria-labelledby="properties-title">
+    <section class="card compact dashboard-panel" data-dashboard-panel="properties" aria-labelledby="properties-title">
       <div class="card-heading"><div><p class="eyebrow">Household CRM</p><h2 id="properties-title">Saved homes</h2></div><span class="pill" id="propertyCount">Checking…</span></div>
       <p class="help" id="propertiesDetail">Only homes saved by this household appear here. No external property or owner data has been imported.</p>
       <div class="property-filters">
@@ -106,20 +113,20 @@
       <button class="secondary" id="refreshProperties" type="button">Refresh saved homes</button>
     </section>
 
-    <section class="card compact" aria-labelledby="handoff-title">
+    <section class="card compact dashboard-panel" data-dashboard-panel="crm" aria-labelledby="handoff-title">
       <div class="card-heading"><div><p class="eyebrow">Data handoff</p><h2 id="handoff-title">Export saved homes</h2></div><span class="pill">CSV</span></div>
       <p class="help">Download only the homes you saved here, then import that file into any outside service you choose. Five Pointes does not connect to, select, or receive data from a vendor.</p>
       <button class="secondary" id="exportProperties" type="button">Download saved homes CSV</button>
       <p class="help" id="exportDetail" aria-live="polite">The export contains your saved property IDs, household stage, action count, and last activity time—no recorder credentials or route coordinates.</p>
     </section>
 
-    <section class="card compact" aria-labelledby="sync-title">
+    <section class="card compact dashboard-panel" data-dashboard-panel="crm" aria-labelledby="sync-title">
       <div class="card-heading"><div><p class="eyebrow">Sync</p><h2 id="sync-title">Your phone keeps the queue</h2></div></div>
       <p id="syncDetail">Nothing waiting to send.</p>
       <button class="secondary" id="syncNow" type="button">Sync now</button>
     </section>
 
-    <section class="card compact" aria-labelledby="recorder-title">
+    <section class="card compact dashboard-panel" data-dashboard-panel="crm" aria-labelledby="recorder-title">
       <div class="card-heading"><div><p class="eyebrow">Driving recorder</p><h2 id="recorder-title">Prepare this iPhone</h2></div><span class="pill">Pilot</span></div>
       <p id="recorderDetail">Create a private one-phone setup for the background-recording pilot. No location is collected until you start recording in Traccar.</p>
       <button class="secondary" id="prepareRecorder" type="button">Prepare recorder</button>
@@ -136,8 +143,16 @@
       </div>
     </section>
 
-    <section class="card compact" aria-labelledby="route-title">
+    <section class="card compact dashboard-panel" data-dashboard-panel="map" aria-labelledby="route-title">
       <div class="card-heading"><div><p class="eyebrow">Private drive map</p><h2 id="route-title">Latest route</h2></div><span class="pill" id="routeCount">Not loaded</span></div>
+      <div class="coverage-stats" aria-label="Private coverage summary">
+        <div><strong id="overallCoverage">—</strong><span>overall street preview</span></div>
+        <div><strong id="grossePointeCoverage">—</strong><span>Grosse Pointe</span></div>
+        <div><strong id="farmsCoverage">—</strong><span>Farms</span></div>
+        <div><strong id="parkCoverage">—</strong><span>Park</span></div>
+        <div><strong id="shoresCoverage">—</strong><span>Shores</span></div>
+        <div><strong id="woodsCoverage">—</strong><span>Woods</span></div>
+      </div>
       <p id="routeDetail">Your route is visible only after signing in to this household app. No third-party map service receives it.</p>
       <p class="help" id="coverageDetail">Covered street segments will be highlighted after a route loads. You can also make a private household-wide preview across completed drives; neither view is a final canonical coverage total.</p>
       <label class="route-selector" id="routeSelector" for="routeSession" hidden>Choose a completed drive
@@ -146,6 +161,19 @@
       <canvas class="route-map" id="routeMap" width="600" height="360" role="img" aria-label="Map of the latest private drive"></canvas>
       <button class="secondary" id="loadRoute" type="button">Show latest route</button>
       <button class="secondary route-action" id="loadHouseholdCoverage" type="button">Show household coverage</button>
+    </section>
+
+    <section class="card compact dashboard-panel" data-dashboard-panel="pipeline" aria-labelledby="pipeline-title">
+      <div class="card-heading"><div><p class="eyebrow">Household pipeline</p><h2 id="pipeline-title">From saved home to closed</h2></div></div>
+      <p class="help">These are real household workflow counts. “Properties passed” is intentionally not estimated until a verified building/parcel reference is available.</p>
+      <div class="pipeline-list">
+        <div><span>Properties passed</span><strong id="pipelinePassed">Not modeled</strong></div>
+        <div><span>Saved</span><strong id="pipelineSaved">0</strong></div>
+        <div><span>Reached out</span><strong id="pipelineReached">0</strong></div>
+        <div><span>In conversation</span><strong id="pipelineConversation">0</strong></div>
+        <div><span>Contractor offer</span><strong id="pipelineOffer">0</strong></div>
+        <div><span>Closed</span><strong id="pipelineClosed">0</strong></div>
+      </div>
     </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

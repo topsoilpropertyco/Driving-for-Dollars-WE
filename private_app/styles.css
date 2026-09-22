@@ -34,6 +34,10 @@ body {
 header {
   padding: 16px 4px 25px;
 }
+.dashboard-nav { position: sticky; z-index: 4; top: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 -4px 16px; padding: 8px 4px; background: color-mix(in srgb, var(--wash) 92%, transparent); backdrop-filter: blur(10px); }
+.dashboard-nav button { border: 0; border-radius: 10px; padding: 10px 6px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 800; }
+.dashboard-nav button.active { background: var(--ink); color: #fff; }
+.dashboard-panel[hidden] { display: none; }
 .eyebrow {
   margin: 0 0 5px;
   color: var(--muted);
@@ -276,6 +280,16 @@ textarea:focus-visible {
   background: #f4f7fb;
 }
 .route-selector { margin-top: 10px; }
+.coverage-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }
+.coverage-stats div { padding: 10px; border-radius: 12px; background: #f5f8fe; }
+.coverage-stats strong,.coverage-stats span { display: block; }
+.coverage-stats strong { font-size: 18px; letter-spacing: -.04em; }
+.coverage-stats span { color: var(--muted); font-size: 11px; }
+.pipeline-list { display: grid; gap: 2px; }
+.pipeline-list div { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.pipeline-list div:last-child { border-bottom: 0; }
+.pipeline-list span { color: var(--muted); font-size: 13px; }
+.pipeline-list strong { font-size: 18px; }
 .property-filters { display: grid; gap: 8px; margin-top: 14px; }
 .property-list { display: grid; gap: 8px; margin: 14px 0; }
 .property-row { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: #f8fafc; color: var(--ink); text-align: left; font: inherit; }

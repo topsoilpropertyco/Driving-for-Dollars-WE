@@ -55,7 +55,7 @@ export function previewCoverage(routeOrPaths, roadLines, thresholdMeters = 30) {
       const length = Math.hypot(end[0] - start[0], end[1] - start[1]);
       totalMeters += length;
       if (routeSegments.some(([routeStart, routeEnd]) => segmentDistance(start, end, routeStart, routeEnd) <= thresholdMeters)) {
-        covered.add(`${road.name}|${index}`);
+        covered.add(`${road.id || road.name}|${index}`);
         coveredMeters += length;
       }
     }
