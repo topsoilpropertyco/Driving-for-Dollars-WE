@@ -123,7 +123,7 @@ const conditionNames = { pristine: "Pristine", average: "Average", needs_work: "
 function savedScoreSummary(tag) {
   const scores = [`${conditionNames[tag.condition] || "House condition"} · ${tag.score}/10`];
   if (Number.isInteger(tag.home_excitement_score)) scores.push(`Home excitement ${tag.home_excitement_score}/10`);
-  if (Number.isInteger(tag.neighborhood_excitement_score)) scores.push(`Neighborhood excitement ${tag.neighborhood_excitement_score}/10`);
+  if (Number.isInteger(tag.neighborhood_excitement_score)) scores.push(`Neighborhood joy ${tag.neighborhood_excitement_score}/10`);
   return scores.join(" · ");
 }
 async function showProperty(identity) {
