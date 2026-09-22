@@ -199,19 +199,26 @@ async function googlePlaces(request, env, email) {
 async function coveragePreview(request, env, email) {
   if (request.method === "GET") {
     const result = await env.DB.prepare(
-      "SELECT segment_id FROM coverage_preview_segments WHERE created_by_email = ? ORDER BY segment_id LIMIT 20000"
+      "SELECT segment_id, last_seen_at FROM coverage_preview_segments WHERE created_by_email = ? ORDER BY segment_id LIMIT 20001"
     ).bind(email).all();
-    return json({ segments: (result.results || []).map(row => row.segment_id) });
+    const rows = result.results || [];
+    const campaign = rows.find(row => row.segment_id === "__five_pointes_campaign_start__");
+    const entries = rows.filter(row => row.segment_id !== "__five_pointes_campaign_start__").map(row => ({ segment_id: row.segment_id, last_seen_at: row.last_seen_at }));
+    return json({ segments: entries.map(entry => entry.segment_id), entries, campaign_started_at: campaign?.last_seen_at || null });
   }
   let body;
   try { body = await request.json(); } catch { return json({ error: "invalid_request" }, 400); }
-  if (!body || typeof body !== "object" || !Array.isArray(body.segments) || body.segments.length > 20000 || !body.segments.every(validCoverageSegment)) return json({ error: "invalid_request" }, 400);
+  if (!body || typeof body !== "object" || !Object.keys(body).every(field => field === "segments" || field === "start_fresh_campaign") || !Array.isArray(body.segments) || body.segments.length > 20000 || !body.segments.every(validCoverageSegment) || ("start_fresh_campaign" in body && body.start_fresh_campaign !== true)) return json({ error: "invalid_request" }, 400);
   const now = new Date().toISOString();
   const unique = [...new Set(body.segments)];
-  await env.DB.batch(unique.map(segment => env.DB.prepare(
+  const statements = unique.map(segment => env.DB.prepare(
     "INSERT INTO coverage_preview_segments (created_by_email, segment_id, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?) ON CONFLICT(created_by_email, segment_id) DO UPDATE SET last_seen_at = excluded.last_seen_at"
-  ).bind(email, segment, now, now)));
-  return json({ stored_segments: unique.length });
+  ).bind(email, segment, now, now));
+  if (body.start_fresh_campaign) statements.push(env.DB.prepare(
+    "INSERT INTO coverage_preview_segments (created_by_email, segment_id, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?) ON CONFLICT(created_by_email, segment_id) DO UPDATE SET last_seen_at = excluded.last_seen_at"
+  ).bind(email, "__five_pointes_campaign_start__", now, now));
+  if (statements.length) await env.DB.batch(statements);
+  return json({ stored_segments: unique.length, campaign_started_at: body.start_fresh_campaign ? now : null });
 }
 
 function validUtc(value) {

@@ -286,6 +286,27 @@ $("captureForm").addEventListener("submit", async event => {
 });
 $("propertyScore").addEventListener("input", () => { $("propertyScoreValue").value = $("propertyScore").value; $("propertyScoreValue").textContent = $("propertyScore").value; });
 $("syncNow").addEventListener("click", sync);
+$("startFreshCoverage").addEventListener("click", async () => {
+  const button = $("startFreshCoverage");
+  button.disabled = true;
+  button.textContent = "Starting…";
+  try {
+    const response = await fetch("/api/v1/coverage-preview", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ segments: [], start_fresh_campaign: true }) });
+    if (!response.ok) throw new Error("campaign unavailable");
+    const result = await response.json();
+    campaignStartedAt = result.campaign_started_at;
+    storedCoverageSegments = new Set();
+    $("freshCoverageCard").hidden = true;
+    $("freshCoverageDetail").textContent = "Fresh coverage is active. Earlier private data is retained, not deleted.";
+    await refreshCoverageHistory();
+    await refreshCoverageFromCompletedDrives();
+    toast("Fresh coverage map started. Nothing was deleted.");
+  } catch {
+    $("freshCoverageDetail").textContent = "Could not start a fresh coverage view. Earlier data is unchanged.";
+    button.disabled = false;
+    button.textContent = "Start fresh coverage map";
+  }
+});
 function activateDashboard(view) {
   document.querySelectorAll("[data-dashboard-view]").forEach(item => item.classList.toggle("active", item.dataset.dashboardView === view));
   document.querySelectorAll("[data-dashboard-panel]").forEach(panel => { panel.hidden = panel.dataset.dashboardPanel !== view; });
@@ -447,9 +468,14 @@ async function refreshCoverageHistory() {
   try {
     const [response, streetLines] = await Promise.all([fetch("/api/v1/coverage-preview", { cache: "no-store" }), roads()]);
     if (!response.ok) throw new Error("coverage history unavailable");
-    const { segments } = await response.json();
-    for (const segment of segments) storedCoverageSegments.add(segment);
+    const history = await response.json();
+    campaignStartedAt = history.campaign_started_at || null;
+    const entries = Array.isArray(history.entries) ? history.entries : (history.segments || []).map(segment_id => ({ segment_id, last_seen_at: null }));
+    const activeEntries = campaignStartedAt ? entries.filter(entry => Date.parse(entry.last_seen_at) >= Date.parse(campaignStartedAt)) : entries;
+    storedCoverageSegments = new Set(activeEntries.map(entry => entry.segment_id));
     renderStoredCoverageStats(storedCoverageSegments, streetLines);
+    $("freshCoverageCard").hidden = Boolean(campaignStartedAt);
+    if (campaignStartedAt) $("freshCoverageDetail").textContent = "Fresh coverage is active. Earlier private data is retained, not deleted.";
     drawCoverageMap();
   } catch {
     // The map can still calculate a current-drive preview after it loads.
@@ -457,6 +483,7 @@ async function refreshCoverageHistory() {
 }
 
 let storedCoverageSegments = new Set();
+let campaignStartedAt = null;
 let selectedMapCity = "all";
 let selectedRoutePaths = [];
 const mapViewport = { scale: 1, x: 0, y: 0 };
@@ -602,6 +629,7 @@ function drawRoutePaths(routes, roadLines, coverage) {
 }
 
 let routeSessionsLoaded = false;
+let routeSessions = [];
 function readableDistance(meters) {
   return meters >= 1609 ? `${(meters / 1609.344).toFixed(1)} mi` : `${Math.round(meters)} m`;
 }
@@ -614,6 +642,7 @@ async function loadRouteSessions() {
   const response = await fetch("/api/v1/recorders/sessions", { cache: "no-store" });
   if (!response.ok) throw new Error("drive history unavailable");
   const { sessions } = await response.json();
+  routeSessions = sessions;
   const select = $("routeSession");
   select.replaceChildren(...sessions.map(session => {
     const option = document.createElement("option");
@@ -662,7 +691,9 @@ $("driveHistory").addEventListener("toggle", async event => {
 async function refreshCoverageFromCompletedDrives() {
   try {
     await loadRouteSessions();
-    const sessionIds = [...$("routeSession").options].map(option => option.value).filter(Boolean);
+    const sessionIds = routeSessions
+      .filter(session => !campaignStartedAt || Date.parse(session.started_at) >= Date.parse(campaignStartedAt))
+      .map(session => session.session_id).filter(Boolean);
     const routes = await Promise.all(sessionIds.map(async session => {
       const response = await fetch(`/api/v1/recorders/latest-route?session=${encodeURIComponent(session)}`, { cache: "no-store" });
       if (!response.ok) throw new Error("route unavailable");
