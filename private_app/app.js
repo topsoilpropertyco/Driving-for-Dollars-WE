@@ -666,6 +666,7 @@ function drawRoutePaths(routes, roadLines, coverage) {
 
 let routeSessionsLoaded = false;
 let routeSessions = [];
+let routeSessionsLoading = null;
 function readableDistance(meters) {
   return meters >= 1609 ? `${(meters / 1609.344).toFixed(1)} mi` : `${Math.round(meters)} m`;
 }
@@ -675,19 +676,27 @@ function readableDuration(seconds) {
 }
 async function loadRouteSessions() {
   if (routeSessionsLoaded) return;
-  const response = await fetch("/api/v1/recorders/sessions", { cache: "no-store" });
-  if (!response.ok) throw new Error("drive history unavailable");
-  const { sessions } = await response.json();
-  routeSessions = sessions;
-  const select = $("routeSession");
-  select.replaceChildren(...sessions.map(session => {
-    const option = document.createElement("option");
-    option.value = session.session_id;
-    option.textContent = `${new Date(session.started_at).toLocaleString()} — ${readableDistance(session.sampled_distance_meters)}`;
-    return option;
-  }));
-  $("routeSelector").hidden = sessions.length < 1;
-  routeSessionsLoaded = true;
+  if (routeSessionsLoading) return routeSessionsLoading;
+  routeSessionsLoading = (async () => {
+    const response = await fetch("/api/v1/recorders/sessions", { cache: "no-store" });
+    if (!response.ok) throw new Error("drive history unavailable");
+    const { sessions } = await response.json();
+    routeSessions = sessions;
+    const select = $("routeSession");
+    select.replaceChildren(...sessions.map(session => {
+      const option = document.createElement("option");
+      option.value = session.session_id;
+      option.textContent = `${new Date(session.started_at).toLocaleString()} — ${readableDistance(session.sampled_distance_meters)}`;
+      return option;
+    }));
+    $("routeSelector").hidden = sessions.length < 1;
+    routeSessionsLoaded = true;
+  })();
+  try {
+    return await routeSessionsLoading;
+  } finally {
+    routeSessionsLoading = null;
+  }
 }
 async function loadSelectedRoute() {
   const button = $("loadRoute");
@@ -724,8 +733,11 @@ $("driveHistory").addEventListener("toggle", async event => {
   try { await loadRouteSessions(); }
   catch { $("routeDetail").textContent = "Historical drives are unavailable right now. Your coverage map is unchanged."; }
 });
+let completedDriveCoverageRefresh = null;
 async function refreshCoverageFromCompletedDrives() {
-  try {
+  if (completedDriveCoverageRefresh) return completedDriveCoverageRefresh;
+  completedDriveCoverageRefresh = (async () => {
+    try {
     await coverageHistoryReady;
     await loadRouteSessions();
     const sessionIds = routeSessions
@@ -744,8 +756,14 @@ async function refreshCoverageFromCompletedDrives() {
     for (const segment of coverage.covered) storedCoverageSegments.add(segment);
     renderStoredCoverageStats(storedCoverageSegments, streetLines);
     await drawCoverageMap();
-  } catch {
-    // Existing persisted coverage remains visible if a fresh route cannot load.
+    } catch {
+      // Existing persisted coverage remains visible if a fresh route cannot load.
+    }
+  })();
+  try {
+    return await completedDriveCoverageRefresh;
+  } finally {
+    completedDriveCoverageRefresh = null;
   }
 }
 document.querySelectorAll("[data-map-city]").forEach(button => button.addEventListener("click", () => {
