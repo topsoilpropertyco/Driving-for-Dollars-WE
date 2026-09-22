@@ -1,6 +1,6 @@
 {
-  "name": "Five Pointes Home Search",
-  "short_name": "Five Pointes",
+  "name": "Driving for Dollars",
+  "short_name": "Driving for Dollars",
   "description": "Private household app for the Grosse Pointes home search.",
   "start_url": "/",
   "display": "standalone",
