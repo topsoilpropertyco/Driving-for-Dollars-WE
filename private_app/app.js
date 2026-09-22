@@ -220,7 +220,7 @@ $("captureForm").addEventListener("submit", async event => {
     toast("Location is needed to save this tagged home.");
   } finally {
     submit.disabled = false;
-    submit.textContent = "Save tagged house";
+    submit.textContent = "Save and Tag This House";
   }
 });
 $("propertyScore").addEventListener("input", () => { $("propertyScoreValue").value = $("propertyScore").value; $("propertyScoreValue").textContent = $("propertyScore").value; });
