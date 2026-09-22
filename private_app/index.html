@@ -71,7 +71,7 @@
           <label><input type="radio" name="condition" value="abandoned"><span aria-hidden="true">🏚️</span> Abandoned</label>
         </fieldset>
         <div class="score-control score-condition">
-          <label for="propertyScore"><span class="score-title">🏠 House condition score <output id="propertyScoreValue" for="propertyScore">5</output> / 10</span><span class="score-help">(higher score = higher-quality home)</span></label>
+          <label for="propertyScore"><span class="score-title">🏠 House condition score <output id="propertyScoreValue" for="propertyScore">5</output> / 10</span></label>
           <input id="propertyScore" name="propertyScore" type="range" min="1" max="10" value="5" step="1">
         </div>
         <div class="score-control score-home-excitement">
@@ -86,7 +86,7 @@
         <input id="privateLabel" aria-label="Private Label" disabled placeholder="Leave this blank">
         <p class="help" id="locationStatus">Choose an address suggestion for an exact address star, or Five Pointes uses your current location when you save. Use this only while parked or as a passenger.</p>
 
-        <label for="note">Quick note <span>optional</span></label>
+        <label for="note">Notes <span>optional</span></label>
         <textarea id="note" name="note" maxlength="1000" placeholder="What stood out about the house or block?"></textarea>
         <button class="primary" id="captureSubmit" type="submit">Save this house</button>
       </form>

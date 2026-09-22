@@ -311,9 +311,9 @@ textarea:focus-visible {
 .scoreboard-title { margin: 2px 0 -2px; font-size: 15px; letter-spacing: -.02em; }
 .drive-history { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 15px; }
 .drive-history summary { cursor: pointer; color: #203757; font-weight: 800; }
-.condition-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 16px 0 0; padding: 0; border: 0; }
+.condition-picker { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; margin: 16px 0 0; padding: 0; border: 0; }
 .condition-picker legend { grid-column: 1 / -1; margin-bottom: 1px; font-size: 13px; font-weight: 750; }
-.condition-picker label { display: flex; align-items: center; gap: 6px; margin: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 12px; }
+.condition-picker label { display: flex; align-items: center; gap: 8px; margin: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
 .condition-picker input, .location-choice input { display: inline-block; width: auto; margin: 0; padding: 0; }
 .location-choice { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
 #privateLabel:disabled { border-color: #dde3ec; background: #eef2f7; color: #8a96a8; cursor: not-allowed; }
@@ -324,7 +324,6 @@ textarea:focus-visible {
 .score-control { margin-top: 18px; }
 .score-control label { display: grid; gap: 1px; }
 .score-control .score-title { color: var(--ink); font-size: clamp(12px, 3.55vw, 15px); font-weight: 800; letter-spacing: -.035em; line-height: 1.2; white-space: nowrap; }
-.score-control .score-help { color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; }
 .score-control output { font-weight: 800; }
 .score-control input[type="range"] { padding: 0; }
 #propertyScore { accent-color: #2374e6; }
