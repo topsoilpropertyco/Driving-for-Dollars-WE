@@ -122,7 +122,10 @@ function timelineLabel(item) {
   if (item.kind === "outreach_logged") return `Outreach: ${item.payload.method}`;
   return "Updated";
 }
-const conditionNames = { pristine: "Pristine", average: "Average", needs_work: "Needs work", abandoned: "Abandoned" };
+const conditionNames = {
+  pristine: "Pristine", average: "Average", needs_work: "Needs work",
+  needs_minor_work: "Needs minor work", needs_major_work: "Needs Major Work", abandoned: "Abandoned",
+};
 function savedScoreSummary(tag) {
   const scores = [`${conditionNames[tag.condition] || "House condition"} · ${tag.score}/10`];
   if (Number.isInteger(tag.home_excitement_score)) scores.push(`Home excitement ${tag.home_excitement_score}/10`);

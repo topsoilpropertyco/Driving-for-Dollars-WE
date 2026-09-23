@@ -7,7 +7,9 @@ const STAGES = new Set([
   "contractor_offer", "realtor_referral", "closed", "archived",
 ]);
 const KINDS = new Set(["property_saved", "note_added", "stage_changed", "outreach_logged", "property_tagged"]);
-const CONDITIONS = new Set(["pristine", "average", "needs_work", "abandoned"]);
+// Keep needs_work accepted for tags already saved before the condition split.
+// New captures use the explicit minor/major values below.
+const CONDITIONS = new Set(["pristine", "average", "needs_work", "needs_minor_work", "needs_major_work", "abandoned"]);
 const TAG_PREFIX = "five_pointes_private_tag:";
 const OPTIONAL_TAG_SCORES = ["home_excitement_score", "neighborhood_excitement_score"];
 // This Worker is a single private household deployment. All Cloudflare Access
